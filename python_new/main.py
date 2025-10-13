@@ -11,13 +11,14 @@ Converted to Python by: Assistant, October 2025
 from pathlib import Path
 from unzip_data import unzip_data
 from calculate_trade_matrix import calculate_trade_matrix
-# from animal_products_to_feed import AnimalProductsToFeed
-# from calculate_area import CalculateArea
+from animal_products_to_feed import animal_products_to_feed
+from calculate_area import calculate_area
+
 
 
 # CONFIG
 # Select years for which to calculate the results (1986 to 2013)
-FOR_YEARS = list(range(2013, 2014))  # 1986 to 2013 inclusive # TODO: change back to range(1986, 2014)
+FOR_YEARS = list(range(2013, 2015))  # 1986 to 2013 inclusive # TODO: change back to range(1986, 2014)
 
 # Select a conversion method
 # Possible inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
@@ -32,13 +33,16 @@ PREFER_IMPORT = "import"
 
 def main():
 
+    print(f"Starting MRIO calculations for years {FOR_YEARS[0]}-{FOR_YEARS[-1]}, using {CONVERSION_OPTION} as the conversion option and preferring {PREFER_IMPORT} data.")
+
+
     # Create a directory for results if it doesn't exist
-    results_dir = Path("results")
+    results_dir = Path("../results")
     results_dir.mkdir(exist_ok=True)
 
     print("Unzipping data...")
     try:
-        # unzip_data() # Uncomment this line to enable unzipping
+        # unzip_data('.') # Uncomment this line to enable unzipping
         print("Data unzipping completed successfully")
     except Exception as e:
         print(f"Error during data unzipping: {e}")
@@ -52,24 +56,17 @@ def main():
             year=year,
             prefer_import=PREFER_IMPORT)
 
+        animal_products_to_feed(
+            prefer_import=PREFER_IMPORT,
+            conversion_opt=CONVERSION_OPTION,
+            year=year)
+        
+        calculate_area(
+            prefer_import=PREFER_IMPORT,
+            conversion_opt=CONVERSION_OPTION,
+            year=year)
 
-        # # Step 2: Convert Animal Products to Feed
-        # animal_to_feed_converter = AnimalProductsToFeed(
-        #     conversion_opt=CONVERSION_OPTION,
-        #     included_years=year,
-        #     prefer_import=PREFER_IMPORT
-        # )
-        # animal_to_feed_converter.run()
-
-        # # Step 3: Calculate Area Needed for Production
-        # area_calculator = CalculateArea(
-        #     conversion_opt=CONVERSION_OPTION,
-        #     included_years=year,
-        #     prefer_import=PREFER_IMPORT
-        # )
-        # area_calculator.run()
-
-        print(f"Year {year} processing completed successfully")
+        print(f"Year {year} processing completed successfully\n")
 
 
 

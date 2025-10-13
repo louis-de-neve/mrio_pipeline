@@ -29,7 +29,7 @@ def calculate_mrio_matrices(Z, p):
     A = Z @ np.diag(one_over_x)
     
     I = np.eye(len(p))
-    R = np.linalg.inv(I - A) @ np.diag(p)
+    R = np.linalg.pinv(I - A) @ np.diag(p) # note pseudo-inverse rather than inverse (inverse creates some extra)
     
     ac = x - Z.sum(axis=0)
     c = ac * one_over_x
@@ -98,6 +98,35 @@ def mrio_model(item_code, year, p_data, prod_data):
         'Year': year
     } for i, j in zip(i_indices, j_indices)]
 
+
+def calculate_conversion_factors(conversion_opt, content_factors, item_map):
+        """Calculate conversion factors from processed to primary items"""
+
+        # Calculate conversion factors
+        if conversion_opt not in content_factors.columns:
+                raise ValueError(f"Primary Conversion option ({conversion_opt}) not available")
+                
+        joined = item_map.merge(
+            content_factors[['Item_Code', conversion_opt]], 
+            left_on='FAO_code', 
+            right_on='Item_Code', 
+            how='left')
+
+        joined = joined.merge(
+            content_factors[['Item_Code', conversion_opt]], 
+            left_on='primary_item', 
+            right_on='Item_Code', 
+            how='left',
+            suffixes=('_processed', '_primary'))
+
+        joined['Conversion_factor'] = joined[f'{conversion_opt}_processed'] / joined[f'{conversion_opt}_primary']
+        joined = joined.sort_values('FAO_code')
+        joined.loc[~np.isfinite(joined['Conversion_factor']), 'Conversion_factor'] = 0
+        result = joined.dropna(subset=['Conversion_factor'])
+        conversion_factors = result[['FAO_code', 'FAO_name', 'primary_item', 'FAO_name_primary', 'Conversion_factor']]
+        return conversion_factors
+
+
 def calculate_trade_matrix(
         conversion_opt="dry_matter",
         year=2013,
@@ -106,7 +135,7 @@ def calculate_trade_matrix(
 
     output_filename = f"../results/TradeMatrix_{prefer_import}_{conversion_opt}_{year}.csv"
 
-    print("Loading files...")
+    print("    Loading trade data...")
 
     # File paths
     item_map_filename = "../primary_item_map_feed.csv"
@@ -149,7 +178,7 @@ def calculate_trade_matrix(
     production_crops.drop(columns=['Note'], inplace=True)
     production_offals = production_offals[(production_offals['Element_Code'] == 5510) & (production_offals['Item_Code'] == 2736)]
 
-    print("Setting up data...")
+    print("    Preprocessing trade data...")
 
     # Combine and filter
     production_all = pd.concat([production_crops, production_animals, production_offals], ignore_index=True)
@@ -186,33 +215,7 @@ def calculate_trade_matrix(
 
     trade_data = trade_data.sort_values(['Consumer_Country_Code', 'Producer_Country_Code'])
 
-
-    print("Calculating conversion factors...")
-
-    # Calculate conversion factors
-    if conversion_opt not in content_factors.columns:
-            raise ValueError(f"Primary Conversion option ({conversion_opt}) not available")
-            
-    joined = item_map.merge(
-        content_factors[['Item_Code', conversion_opt]], 
-        left_on='FAO_code', 
-        right_on='Item_Code', 
-        how='left')
-
-    joined = joined.merge(
-        content_factors[['Item_Code', conversion_opt]], 
-        left_on='primary_item', 
-        right_on='Item_Code', 
-        how='left',
-        suffixes=('_processed', '_primary'))
-
-    joined['Conversion_factor'] = joined[f'{conversion_opt}_processed'] / joined[f'{conversion_opt}_primary']
-    joined = joined.sort_values('FAO_code')
-    joined.loc[~np.isfinite(joined['Conversion_factor']), 'Conversion_factor'] = 0
-    result = joined.dropna(subset=['Conversion_factor'])
-    conversion_factors = result[['FAO_code', 'FAO_name', 'primary_item', 'FAO_name_primary', 'Conversion_factor']]
-
-
+    conversion_factors = calculate_conversion_factors(conversion_opt, content_factors, item_map)
 
 
     trade_data = trade_data.merge(
@@ -232,7 +235,6 @@ def calculate_trade_matrix(
         (primary_data['primary_item'].notna()) &
         (primary_data['Value_Sum'].notna())]
 
-    print("Preprocessing sugar data...")
 
     # Calculate sugar production and sugar production shares
     sugar_crop_codes = [156, 157]
@@ -275,7 +277,7 @@ def calculate_trade_matrix(
 
 
     mrio_output = []
-    for index, (yr, ic) in enumerate(tqdm(unique_combinations.values, desc="Processing MRIO models", leave=True, position=0)):
+    for index, (yr, ic) in enumerate(tqdm(unique_combinations.values, desc="    Processing MRIO models", leave=True, position=0)):
         m = mrio_model(ic, yr, primary_data, production_all)
         mrio_output += m
         
@@ -387,7 +389,7 @@ def calculate_trade_matrix(
 
     output_data = pd.concat([transformed_data[transformed_data['Item_Code'] != 2545], sugar_data], ignore_index=True)
 
-    print("Saving output...")
+    print("    Saving MRIO results...")
 
     # transformed_data['Value'] = transformed_data['Value'].round(2)
     output_data = output_data[['Consumer_Country_Code', 'Producer_Country_Code', 'Value', 'Item_Code', 'Year']]

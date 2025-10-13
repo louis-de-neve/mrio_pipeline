@@ -7,14 +7,14 @@ import zipfile
 
 from pathlib import Path
 
-def unzip_data():
+def unzip_data(path='.'):
     """
     Unzip FAOSTAT data files
     This function should be executed to unzip the data from FAOSTAT if not already done
     """
     
-    # Look for zip files in the current directory
-    zip_files = list(Path('.').glob('*.zip'))
+    # Look for zip files in the path directory
+    zip_files = list(Path(path).glob('*.zip'))
     
     if not zip_files:
         print("No zip files found to extract")
