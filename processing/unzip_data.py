@@ -35,8 +35,11 @@ def unzip_data(path="./input_data"):
                 zip_ref.extractall(path)
 
     # Delete unnecessary files
-    for flags_file in Path(path).glob("*Flags.csv"):
-        try:
-            flags_file.unlink()
-        except Exception as e:
-            print(f"Error deleting {flags_file}: {e}")
+    # Delete unnecessary files: *Flags.csv, AreaCodes.csv, Elements.csv, ItemCodes.csv
+    unnecessary_patterns = ["*Flags.csv", "*AreaCodes.csv", "*Elements.csv", "*ItemCodes.csv"]
+    for pattern in unnecessary_patterns:
+        for file in Path(path).glob(pattern):
+            try:
+                file.unlink()
+            except Exception as e:
+                print(f"Error deleting {file}: {e}")

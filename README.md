@@ -42,10 +42,10 @@ Please cite appropriately when using this code.
 
 ### Quick Start
 1. Download the FAOSTAT data files and place in the input_data directory
-    - [Production_Crops_Livestock_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/Production_Crops_Livestock_E_All_Data_(Normalized).zip)
-    - [FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip)
-    - [FoodBalanceSheets_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/FoodBalanceSheets_E_All_Data_(Normalized).zip)
-    - [Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip)
+    - [Production_Crops_Livestock_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/Production_Crops_Livestock_E_All_Data_(Normalized).zip)
+    - [FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip)
+    - [FoodBalanceSheets_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/FoodBalanceSheets_E_All_Data_(Normalized).zip)
+    - [Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip)
 
 2. Configure settings in main.py
 
@@ -115,10 +115,10 @@ Whether to save intermediate results
 The pipeline expects the following data files in the input_data directory:
 
 ### FAOSTAT Data
-- `Production_Crops_Livestock_E_All_Data_(Normalized).csv`
-- `FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv`
-- `FoodBalanceSheets_E_All_Data_(Normalized).csv`
-- `Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv`
+- `Production_Crops_Livestock_E_All_Data_(Normalized).zip`
+- `FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip`
+- `FoodBalanceSheets_E_All_Data_(Normalized).zip`
+- `Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip`
 ### Mapping and Conversion Files
 - `primary_item_map_feed.csv`
 - `CB_to_primary_items_map.csv`

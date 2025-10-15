@@ -22,7 +22,7 @@ import os
 
 # CONFIG
 # Select years for which to calculate the results 
-YEARS = [2023, 2024] #list(range(2014, 2024))
+YEARS = list(range(2014, 2024))
 
 # Select a conversion method
 # inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
