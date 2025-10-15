@@ -56,7 +56,7 @@ Please cite appropriately when using this code.
 
 ### Configuration Options
 
-You can modify the following options in `execute.py`:
+You can modify the following options in `main.py`:
 
 #### Years to Process
 ```python
