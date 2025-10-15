@@ -4,3 +4,7 @@ processing/__pycache__/*
 __pycache__/*
 results/*
 input_data/deprecated/*
+input_data/FoodBalanceSheets_E_All_Data_(Normalized).csv
+input_data/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv
+input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv
+input_data/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv

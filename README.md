@@ -12,10 +12,10 @@ Please cite appropriately when using this code.
 ## Files Overview
 
 ### Main Execution
-- `execute.py` - Main execution script (equivalent to `_Execute.R`)
+- `main.py` - Main execution script (equivalent to `_Execute.R`)
 
 ### Core Modules
-- `calculating_trade_matrix.py` - Calculates apparent consumption and trade links (equivalent to `Calculating_Trade_Matrix.R`)
+- `calculate_trade_matrix.py` - Calculates apparent consumption and trade links (equivalent to `Calculating_Trade_Matrix.R`)
 - `animal_products_to_feed.py` - Converts animal products into embedded feed items (equivalent to `animal_products_to_feed.R`)
 - `calculate_area.py` - Converts traded tons into areas (equivalent to `calculate_area.R`)
 - `unzip_data.py` - Utility for unzipping FAOSTAT data (equivalent to `Unzip data.R`)
@@ -41,13 +41,18 @@ Please cite appropriately when using this code.
 ## Usage
 
 ### Quick Start
-1. Place your FAOSTAT data files in the working directory
-2. Run the main script:
+1. Download the FAOSTAT data files and place in the input_data directory
+    - [Production_Crops_Livestock_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/Production_Crops_Livestock_E_All_Data_(Normalized).zip)
+    - [FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip)
+    - [FoodBalanceSheets_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/FoodBalanceSheets_E_All_Data_(Normalized).zip)
+    - [Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv](https://bulks-faostat.fao.org/production/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip)
+
+2. Configure settings in main.py
+
+3. Run the main script:
    ```bash
-   python execute.py
+   python main.py
    ```
-3. Select your working directory when prompted
-4. The pipeline will process all years from 1986-2013
 
 ### Configuration Options
 
@@ -55,7 +60,7 @@ You can modify the following options in `execute.py`:
 
 #### Years to Process
 ```python
-for_years = list(range(1986, 2014))  # Default: 1986-2013
+YEARS = list(range(1986, 2022))  # Limits: 1986-2022, default: 2013-2022
 ```
 
 #### Conversion Method
@@ -86,56 +91,34 @@ Choose whether to prefer import or export data:
 prefer_import = "import"  # or "export"
 ```
 
-### Manual Execution
-
-You can also run individual modules:
-
+### Pipeline Components
+Control which parts of the pipeline to run:
 ```python
-from calculating_trade_matrix import CalculatingTradeMatrix
-from animal_products_to_feed import AnimalProductsToFeed
-from calculate_area import CalculateArea
-
-# Calculate trade matrix for 2013
-trade_calc = CalculatingTradeMatrix(
-    directory="/path/to/data",
-    conversion_opt="dry_matter",
-    included_years=2013,
-    prefer_import="import"
-)
-trade_calc.run()
-
-# Convert animal products to feed
-feed_calc = AnimalProductsToFeed(
-    directory="/path/to/data",
-    conversion_opt="dry_matter", 
-    included_years=2013,
-    prefer_import="import"
-)
-feed_calc.run()
-
-# Calculate areas
-area_calc = CalculateArea(
-    directory="/path/to/data",
-    conversion_opt="dry_matter",
-    included_years=2013,
-    prefer_import="import"
-)
-area_calc.run()
+PIPELINE_COMPONENTS:list = [0]
 ```
+
+Component options:
+- `0` = Full pipeline (all components)
+- `1` = Unzipping data only
+- `2` = Trade matrix calculation
+- `3` = Animal products to feed calculation
+- `4` = Area calculation
+
+### Save Intermediate Files
+```python
+SAVE_INTERMEDIATES = True 
+```
+Whether to save intermediate results
 
 ## Required Data Files
 
-The pipeline expects the following FAOSTAT data files in the working directory:
+The pipeline expects the following data files in the input_data directory:
 
-### Trade Data
+### FAOSTAT Data
+- `Production_Crops_Livestock_E_All_Data_(Normalized).csv`
+- `FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv`
+- `FoodBalanceSheets_E_All_Data_(Normalized).csv`
 - `Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv`
-
-### Production Data
-- `Production_Crops_E_All_Data_(Normalized).csv`
-- `Production_LivestockPrimary_E_All_Data_(Normalized).csv`
-- `CommodityBalances_LivestockFish_E_All_Data_(Normalized).csv`
-- `CommodityBalances_Crops_E_All_Data_(Normalized).csv`
-
 ### Mapping and Conversion Files
 - `primary_item_map_feed.csv`
 - `CB_to_primary_items_map.csv`
@@ -149,59 +132,10 @@ The pipeline expects the following FAOSTAT data files in the working directory:
 
 For each processed year, the pipeline generates:
 
-### Trade Matrix Files
 - `TradeMatrix_{import/export}_{conversion}_{year}.csv` - Main trade links for apparent consumption
-- `logfile_TradeMatrix_{import/export}_{conversion}_{year}.txt` - Processing log
 
-### Feed Matrix Files  
-- `TradeMatrixFeed_{import/export}_{conversion}_{year}.csv` - Trade links with embedded feed
-- `logfile_TradeMatrixFeed_{import/export}_{conversion}_{year}.txt` - Processing log
-- `TradeMatrixFeed_{import/export}_{conversion}_{year}_nofeeddata.csv` - Countries without feed data
-- `TradeMatrixFeed_{import/export}_{conversion}_{year}_noimportdata.csv` - Import data errors
-
-### Area Files
-- `TradeMatrixFeed_{import/export}_{conversion}_{year}_Area.csv` - Trade values converted to areas
 
 ## Performance Notes
 
-- Processing time: ~40 minutes for all years (1986-2013) on a machine with 16GB RAM
-- Memory usage is significant for large datasets
-- Consider processing years individually for memory-constrained systems
-
-## Error Handling
-
-The pipeline includes comprehensive error handling and logging:
-- Missing data is logged and handled gracefully
-- Matrix singularity issues are resolved using pseudo-inverse
-- All processing steps are logged to individual log files
-
-## Differences from R Version
-
-### Improvements
-- Object-oriented design for better code organization
-- Enhanced error handling and logging
-- More memory-efficient processing
-- Better documentation and type hints
-
-### Dependencies
-- Uses pandas instead of data.table for data manipulation
-- Uses networkx instead of igraph for network analysis
-- Uses scipy for linear algebra operations
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Missing data files**: Ensure all required FAOSTAT files are in the working directory
-2. **Memory errors**: Try processing fewer years at once or increase system memory
-3. **Import errors**: Make sure all required packages are installed via `pip install -r requirements.txt`
-
-### Getting Help
-
-- Check log files for detailed error messages
-- Ensure input data files match expected format and naming
-- Verify Python version compatibility (3.8+)
-
-## License
-
-Please refer to the original publication for licensing terms and cite appropriately when using this code.
+- Processing time: ~40 minutes for all years (1986-2013) on a machine with 32GB RAM
+- Recommended minimum 32GB RAM
