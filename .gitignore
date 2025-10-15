@@ -1,0 +1,6 @@
+.vscode/*
+R(deprecated)/*
+processing/__pycache__/*
+__pycache__/*
+results/*
+input_data/deprecated/*
