@@ -48,20 +48,20 @@ def ml_animal_prod(year, country, production_animals,feed_data, weighing_factors
                 })
     return results
 
-def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter", year=2013):
+def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter", year=2013, historic="Historic"):
     print("    Loading files for animal products to feed conversion...")
 
-    cb_map_filename = "./input_data/CB_to_primary_items_map.csv"
-    cb_split_filename = "./input_data/CB_items_split.csv" 
-    content_factors_filename = "./input_data/content_factors_per_100g.xlsx"
-    cb_conversion_filename = "./input_data/CB_code_FAO_code_for_conversion_factors.csv"
-    cb_crops_filename = "./input_data/CommodityBalances_Crops_E_All_Data_(Normalized).csv"
-    animals_filename = "./input_data/Production_LivestockPrimary_E_All_Data_(Normalized).csv"
-    weighing_filename = "./input_data/weighing_factors.csv"
+    cb_map_filename = "input_data/CB_to_primary_items_map.csv"
+    cb_split_filename = "input_data/CB_items_split.csv" 
+    content_factors_filename = "input_data/content_factors_per_100g.xlsx"
+    cb_conversion_filename = "input_data/CB_code_FAO_code_for_conversion_factors.csv"
+    cb_crops_filename = f"input_data/FoodBalanceSheets{historic}_E_All_Data_(Normalized).csv"
+    animals_filename = "input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv" ###############################
+    weighing_filename = "input_data/weighing_factors.csv"
 
 
-    trade_matrix_filename = f"./results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
-    output_filename = f"./results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
+    trade_matrix_filename = f"results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
+    output_filename = f"results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
 
 
     if not Path(trade_matrix_filename).exists():
@@ -72,7 +72,7 @@ def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter",
     content_factors = pd.read_excel(content_factors_filename, skiprows=1)
     cb_conversion_map = pd.read_csv(cb_conversion_filename, encoding="Latin-1")
     cb_crops_data = pd.read_csv(cb_crops_filename, encoding="Latin-1")
-    production_animals = pd.read_csv(animals_filename, encoding="Latin-1")
+    production_animals = pd.read_csv(animals_filename, encoding="Latin-1", low_memory=False)
     weighing_factors = pd.read_csv(weighing_filename, encoding="Latin-1")
     units = pd.read_excel(content_factors_filename, header=None, nrows=1)
     units.columns = content_factors.columns
@@ -85,7 +85,8 @@ def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter",
 
 
     cb_crops_data = cb_crops_data[(cb_crops_data["Year"] == year) &
-        (cb_crops_data["Element_Code"] == 5520)]    
+        (cb_crops_data["Element_Code"] == 5521)]
+    cb_crops_data['Value'] = cb_crops_data['Value']*1000  
     production_animals = production_animals[(production_animals["Year"] == year) &
         (production_animals["Element_Code"] == 5510)]
 
@@ -177,28 +178,42 @@ def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter",
         ).drop(columns=["AP_Producer_Country_Code", "Animal_Product_Code"])
         
         results.append(merged_chunk)
-    
+        del(merged_chunk)
+
     animal_product_data_full = pd.concat(results, ignore_index=True)
+    print("    Calculating feed use...")
     animal_product_data_full["tons_feed_use"] = animal_product_data_full["feed_share"] * animal_product_data_full["Value"]
     
-    feed_in_animal_products = (animal_product_data_full
+    agg = [] # chunk for memory efficiency
+    for cc in  animal_product_data_full['Consumer_Country_Code'].unique():
+        subset = animal_product_data_full[animal_product_data_full['Consumer_Country_Code'] == cc]
+        subset_feed = (subset
         .groupby(["Year", "Feed_Producer_Country_Code", "Consumer_Country_Code", "Feed_Item_Code", "Item_Code"])
         .agg({"tons_feed_use": "sum"})
         .reset_index()
         .rename(columns={
             "Feed_Producer_Country_Code": "Producer_Country_Code",
             "tons_feed_use": "Value",
+            "Item_Code": "Animal_Product_Code",
             "Feed_Item_Code": "Item_Code",
-            "Item_Code": "Animal_Product_Code"
         })
-        .reindex(columns=["Year", "Producer_Country_Code", "Consumer_Country_Code", "Item_Code", "Value", "Animal_Product_Code"])
-    )
+        .reindex(columns=["Year", "Producer_Country_Code", "Consumer_Country_Code", "Item_Code", "Value", "Animal_Product_Code"]))
+        agg.append(subset_feed)
+    
+    feed_in_animal_products = pd.concat(agg, ignore_index=True)
 
-    feed_use_origin_per_country = (animal_product_data_full
-        .groupby(["Year", "Feed_Producer_Country_Code", "Producer_Country_Code", "Feed_Item_Code", "Item_Code"])
-        .agg({"tons_feed_use": "sum"})
-        .reset_index()
-    )
+
+    agg = [] # chunk for memory efficiency
+    for cc in  animal_product_data_full['Feed_Producer_Country_Code'].unique():
+        subset = animal_product_data_full[animal_product_data_full['Feed_Producer_Country_Code'] == cc]
+        subset_feed = (subset
+            .groupby(["Year", "Feed_Producer_Country_Code", "Producer_Country_Code", "Feed_Item_Code", "Item_Code"])
+            .agg({"tons_feed_use": "sum"})
+            .reset_index())
+        agg.append(subset_feed)
+    feed_use_origin_per_country = pd.concat(agg, ignore_index=True)
+
+
     feed_use_origin_per_country.drop(columns=["Item_Code"], inplace=True)
     feed_use_origin_per_country["tons_feed_use"] = feed_use_origin_per_country["tons_feed_use"] * -1
 
@@ -218,8 +233,3 @@ def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter",
     print("    Saving feed results...")
     output_data.to_csv(output_filename, index=False)
 
-
-if __name__ == "__main__":
-    import os
-    os.chdir('/home/louis/Documents/zoology/pipeline/mrio')
-    animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter", year=2013)

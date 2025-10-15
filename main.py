@@ -10,17 +10,19 @@ Re-written in Python, October 2025 by Louis De Neve
 """
 
 from pathlib import Path
+
 from processing.unzip_data import unzip_data
 from processing.calculate_trade_matrix import calculate_trade_matrix
 from processing.animal_products_to_feed import animal_products_to_feed
 from processing.calculate_area import calculate_area
+
 import os
 
 
 
 # CONFIG
 # Select years for which to calculate the results 
-YEARS = [2013]  # 1986 to 2013 inclusive # TODO: change back to list(range(1986, 2014))
+YEARS = [2023, 2024] #list(range(2014, 2024))
 
 # Select a conversion method
 # inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
@@ -35,14 +37,33 @@ PREFER_IMPORT = "import"
 # select working directory
 WORKING_DIR = '/home/louis/Documents/zoology/pipeline/mrio'
 
-# 0 = all, 1 = unzip only, 2 = trade matrix only, 3 = animal products to feed only, 4 = area calculation only
-PIPELINE_COMPONENTS = 0
+# 0 = all, 1 = unzip, 2 = trade matrix, 3 = animal products to feed, 4 = area calculation
+PIPELINE_COMPONENTS:list = [0]
+
+SAVE_INTERMEDIATES = True  # Whether to save intermediate results or not
+
 
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
     os.chdir(WORKING_DIR)
-    print(f"\nStarting MRIO calculations for years {YEARS[0]}-{YEARS[-1]}, using {CONVERSION_OPTION} as the conversion option and preferring {PREFER_IMPORT} data.\n")
+
+    component_dict = {
+        0: "Full pipeline",
+        1: "Unzipping data",
+        2: "Trade matrix calculation",
+        3: "Animal products to feed calculation",
+        4: "Area calculation"}
+
+    print(f"""\nStarting MRIO calculations with options:
+    Working directory: {WORKING_DIR}
+    Using {CONVERSION_OPTION} as the conversion option
+    Preferring {PREFER_IMPORT} data
+    Running pipeline component {[p for p in PIPELINE_COMPONENTS]}: {[component_dict[p] for p in PIPELINE_COMPONENTS]} 
+    Saving intermediate results: {SAVE_INTERMEDIATES}
+
+    Years to process: {YEARS}
+    """)
 
     # Create directories
     results_dir = Path("./results")
@@ -53,7 +74,8 @@ def main():
     intermediate_results_dir.mkdir(exist_ok=True)
     final_results_dir.mkdir(exist_ok=True)
 
-    if PIPELINE_COMPONENTS in [0, 1]:
+
+    if (0 in PIPELINE_COMPONENTS) or (1 in PIPELINE_COMPONENTS):
         print("Unzipping data...")
         try:
             unzip_data("./input_data") # Uncomment this line to enable unzipping
@@ -62,31 +84,46 @@ def main():
             print(f"Error during data unzipping: {e}")
             # Continue anyway as data might already be unzipped
 
-    if PIPELINE_COMPONENTS == 1:
+    if PIPELINE_COMPONENTS == [1]:
         return
     
     for year in YEARS:
         print(f"\nProcessing year: {year}")
         
-        if PIPELINE_COMPONENTS in [0, 2]:
+        hist = "Historic" if year < 2014 else ""
+
+        if (0 in PIPELINE_COMPONENTS) or (2 in PIPELINE_COMPONENTS):
             calculate_trade_matrix(
                 conversion_opt=CONVERSION_OPTION,
                 prefer_import=PREFER_IMPORT,
-                year=year)
+                year=year,
+                historic=hist)
             
-        if PIPELINE_COMPONENTS in [0, 3]:
+        if (0 in PIPELINE_COMPONENTS) or (3 in PIPELINE_COMPONENTS):
             animal_products_to_feed(
                 prefer_import=PREFER_IMPORT,
                 conversion_opt=CONVERSION_OPTION,
-                year=year)
+                year=year,
+                historic=hist)
             
-        if PIPELINE_COMPONENTS in [0, 4]:
+        if (0 in PIPELINE_COMPONENTS) or (4 in PIPELINE_COMPONENTS):
             calculate_area(
                 prefer_import=PREFER_IMPORT,
                 conversion_opt=CONVERSION_OPTION,
                 year=year)
 
         print(f"Year {year} processing completed successfully\n")
+
+
+    if (not SAVE_INTERMEDIATES) and (PIPELINE_COMPONENTS in [0, 4]):
+        print("\nRemoving intermediate files...")
+        for year in YEARS:
+            intermediate_file = f"./results/intermediate/{year}_TradeMatrix_{PREFER_IMPORT}_{CONVERSION_OPTION}.csv"
+            if Path(intermediate_file).exists():
+                os.remove(intermediate_file)
+            intermediate_file = f"./results/intermediate/{year}_TradeMatrixFeed_{PREFER_IMPORT}_{CONVERSION_OPTION}.csv"
+            if Path(intermediate_file).exists():
+                os.remove(intermediate_file)
 
 
 

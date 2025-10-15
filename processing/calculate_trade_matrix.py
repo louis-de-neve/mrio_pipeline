@@ -140,58 +140,58 @@ def calculate_conversion_factors(conversion_opt, content_factors, item_map):
 def calculate_trade_matrix(
         conversion_opt="dry_matter",
         prefer_import="import",
-        year=2013):
+        year=2013,
+        historic="Historic"):
     """Calculate Trade Matrix module for MRIO pipeline"""
 
-    output_filename = f"./results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
+    output_filename = f"results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
 
     print("    Loading trade data...")
 
     # File paths
-    item_map_filename = "./input_data/primary_item_map_feed.csv"
-    trade_filename = "./input_data/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv"
-    reporting_filename = "./input_data/Reporting_Dates.xls"
-    content_filename = "./input_data/content_factors_per_100g.xlsx"
-    production_crops_filename = "./input_data/Production_Crops_E_All_Data_(Normalized).csv"
-    production_animal_filename = "./input_data/Production_LivestockPrimary_E_All_Data_(Normalized).csv"
-    profuction_offals_filename = "./input_data/CommodityBalances_LivestockFish_E_All_Data_(Normalized).csv"
-    sugar_processing_filename = "./input_data/CommodityBalances_Crops_E_All_Data_(Normalized).csv"
+    item_map_filename = "input_data/primary_item_map_feed.csv" 
+    trade_filename = "input_data/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv" # FAOSTAT import
+    reporting_filename = "input_data/Reporting_Dates.xls"
+    content_filename = "input_data/content_factors_per_100g.xlsx"
+    production_filename = "input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv"
+    sugar_processing_filename = f"input_data/FoodBalanceSheets{historic}_E_All_Data_(Normalized).csv"
+
 
     # Load Files
     item_map = pd.read_csv(item_map_filename, encoding="Latin-1")
     raw_trade_data = pd.read_csv(trade_filename, encoding="Latin-1")
     reporting_date = pd.read_excel(reporting_filename)
     content_factors = pd.read_excel(content_filename, skiprows=1)
-    production_crops = pd.read_csv(production_crops_filename, encoding="Latin-1", low_memory=False)
-    production_animals = pd.read_csv(production_animal_filename, encoding="Latin-1")
-    production_offals = pd.read_csv(profuction_offals_filename, encoding="Latin-1")
     sugar_processing = pd.read_csv(sugar_processing_filename, encoding="Latin-1")                                
+    production = pd.read_csv(production_filename, low_memory=False)
+
 
     # Rename columns
     item_map.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
     raw_trade_data.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
     reporting_date.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
     content_factors.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
-    production_crops.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
-    production_animals.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
-    production_offals.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
     sugar_processing.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
+    production.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
+
 
     # Select year
     raw_trade_data = raw_trade_data[raw_trade_data["Year"] == year]
-    production_crops = production_crops[production_crops["Year"] == year]
-    production_animals = production_animals[production_animals["Year"] == year]
-    production_offals = production_offals[production_offals["Year"] == year]
     sugar_processing = sugar_processing[sugar_processing["Year"] == year]
+    production = production[production["Year"] == year]
+
 
     # Tweaks for slightly different files
-    production_crops.drop(columns=["Note"], inplace=True)
-    production_offals = production_offals[(production_offals["Element_Code"] == 5510) & (production_offals["Item_Code"] == 2736)]
-
+    production_all = production[["Area_Code", "Area", "Item_Code", "Item", "Element_Code", "Element", "Year_Code", "Year", "Unit", "Value"]]
+    # production_crops.drop(columns=["Note"], inplace=True)
+    # production_offals = sugar_processing[(sugar_processing["Element_Code"] == 5511) & (sugar_processing["Item_Code"] == 2736)]
+    # production_offals['Element_Code'] = 5510
+    # production_offals['Value'] = production_offals['Value']*1000
+    
     print("    Preprocessing trade data...")
 
     # Combine and filter
-    production_all = pd.concat([production_crops, production_animals, production_offals], ignore_index=True)
+    # production_all = pd.concat([production_all, production_offals], ignore_index=True)
     production_all = production_all[(production_all["Area_Code"]<300) & (production_all["Element_Code"]==5510)]
 
 
@@ -312,12 +312,13 @@ def calculate_trade_matrix(
     ###################################
 
     sugar_trade_data = transformed_data[transformed_data["Item_Code"] == 2545]
-
+    print(transformed_data)
     sugar_processing = sugar_processing[
         (sugar_processing["Item_Code"].isin([2536, 2537]))&
-        (sugar_processing["Element_Code"] == 5130)&
+        (sugar_processing["Element_Code"] == 5131)&
         (sugar_processing["Area_Code"] < 300)&
         (sugar_processing["Value"] > 0)]
+    sugar_processing['Value'] = sugar_processing['Value']*1000
 
     sugar_processing["Item_Code"] = sugar_processing["Item_Code"].replace({2536: 156, 2537: 157})
 
@@ -327,6 +328,7 @@ def calculate_trade_matrix(
         right_on="FAO_code", 
         how="left"
     )
+    
     sugar_processing["Value_new"] = sugar_processing["Value"] * sugar_processing["Conversion_factor"]
 
 
@@ -405,7 +407,3 @@ def calculate_trade_matrix(
     output_data = output_data[["Consumer_Country_Code", "Producer_Country_Code", "Value", "Item_Code", "Year"]]
     output_data.to_csv(output_filename, index=False)
 
-
-
-if __name__ == "__main__":
-    calculate_trade_matrix(conversion_opt="dry_matter", year=2013, prefer_import="import")

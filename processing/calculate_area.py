@@ -15,10 +15,9 @@ from pathlib import Path
 def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=2013):
     
     print("    Loading area data...")
-    
-    # File paths
-    yield_data_file = "./input_data/Production_Crops_E_All_Data_(Normalized).csv"
-    trade_matrix_file = f"./results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
+        # File paths
+    yield_data_file = "input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv"
+    trade_matrix_file = f"results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
     
     # Check if trade matrix file exists
     if not Path(trade_matrix_file).exists():
@@ -32,8 +31,9 @@ def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=201
     yield_data.rename(columns=lambda x: x.replace(" ", "_"), inplace=True)
     
     # Filter yield data
-    yield_data = yield_data[yield_data["Element"] == "Yield"]
-    
+    yield_data = yield_data[(yield_data["Element"] == "Yield")&(yield_data["Unit"]=="kg/ha")]
+
+
     # Rename columns to match trade data
     yield_data = yield_data.rename(columns={
         "Area_Code": "Producer_Country_Code",
@@ -47,8 +47,10 @@ def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=201
         on=["Producer_Country_Code", "Year", "Item_Code"], 
         how="left")
     
+
     # Calculate area (Value * 10000 / Yield)
-    area_data["Area"] = (area_data["Value"].astype(float) * 10000) / area_data["Yield"]
+    # Value is in tonnes so Value *1,000 gives kg then dividing by Yield (kg/ha) gives area in ha
+    area_data["Area"] = (area_data["Value"].astype(float) * 1000) / area_data["Yield"]
     
     # Select output columns
     output_data = area_data[[
@@ -62,10 +64,6 @@ def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=201
     
     
     print("    Saving final results...")
-    output_filename = f"./results/final/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}_Area.csv"
+    output_filename = f"results/final/TradeMatrixFeed_{prefer_import}_{conversion_opt}_{year}_Area.csv"
     output_data.to_csv(output_filename, index=False)
 
-
-
-if __name__ == "__main__":
-    calculate_area(prefer_import="import", conversion_opt="dry_matter", year=2013)
