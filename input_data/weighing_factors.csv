@@ -1,0 +1,37 @@
+Item_Code,Item,Weighing factors
+867,"Meat, cattle",4
+882,"Milk, whole fresh cow",0.5
+919,"Hides, cattle, fresh",0
+947,"Meat, buffalo",4
+951,"Milk, whole fresh buffalo",0.5
+957,"Hides, buffalo, fresh",0
+977,"Meat, sheep",2
+982,"Milk, whole fresh sheep",0.5
+987,"Wool, greasy",0
+995,"Skins, sheep, fresh",0
+1017,"Meat, goat",2
+1020,"Milk, whole fresh goat",0.5
+1025,"Skins, goat, fresh",0
+1035,"Meat, pig",3
+1058,"Meat, chicken",3
+1062,"Eggs, hen, in shell",1.5
+1069,"Meat, duck",3
+1073,"Meat, goose and guinea fowl",3
+1080,"Meat, turkey",3
+1089,"Meat, bird nes",3
+1091,"Eggs, other bird, in shell",1.5
+1097,"Meat, horse",3
+1108,"Meat, ass",3
+1111,"Meat, mule",3
+1127,"Meat, camel",3
+1130,"Milk, whole fresh camel",0.5
+1141,"Meat, rabbit",3
+1151,"Meat, other rodents",3
+1158,"Meat, other camelids",3
+1163,"Meat, game",0
+1166,"Meat, nes",3
+1176,"Snails, not sea",0
+1182,"Honey, natural",0
+1183,Beeswax,0
+1185,"Silk-worm cocoons, reelable",0
+2736,"Offals, edible",0

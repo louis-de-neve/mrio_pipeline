@@ -1,0 +1,109 @@
+CB_code,CB_name,FAO_code,FAO_name
+2511,Wheat and products,15,Wheat
+2513,Barley and products,44,Barley
+2514,Maize and products,56,Maize
+2515,Rye and products,71,Rye
+2516,Oats,75,Oats
+2517,Millet and products,79,Millet
+2518,Sorghum and products,83,Sorghum
+2520,"Cereals, Other",108,"Cereals, nes"
+2531,Potatoes and products,116,Potatoes
+2532,Cassava and products,125,Cassava
+2533,Sweet potatoes,122,Sweet potatoes
+2534,"Roots, Other",149,"Roots and tubers, nes"
+2535,Yams,137,Yams
+2536,Sugar cane,156,Sugar cane
+2537,Sugar beet,157,Sugar beet
+2541,Sugar non-centrifugal,163,Sugar non-centrifugal
+2542,Sugar (Raw Equivalent),162,Sugar Raw Centrifugal
+2543,"Sweeteners, Other",162,Sugar Raw Centrifugal
+2544,Molasses,165,Molasses
+2546,Beans,176,"Beans, dry"
+2547,Peas,187,"Peas, dry"
+2549,"Pulses, Other and products",211,"Pulses, nes"
+2551,"Pulses, Other and products",234,"Nuts, nes"
+2555,Soyabeans,236,Soybeans
+2556,Groundnuts (Shelled Eq),243,"Groundnuts, shelled"
+2557,Sunflower seed,267,Sunflower seed
+2558,Rape and Mustardseed,270,Rapeseed
+2559,Cottonseed,329,Cottonseed
+2560,Coconuts - Incl Copra,249,Coconuts
+2561,Sesame seed,289,Sesame seed
+2562,Palm kernels,256,Palm kernels
+2563,Olives (including preserved),260,Olives
+2570,"Oilcrops, Other",339,Oilseeds nes
+2571,Soyabean Oil,237,"Oil, soybean"
+2572,Groundnut Oil,244,"Oil, groundnut"
+2573,Sunflowerseed Oil,268,"Oil, sunflower"
+2574,Rape and Mustard Oil,271,"Oil, rapeseed"
+2575,Cottonseed Oil,331,"Oil, cottonseed"
+2576,Palmkernel Oil,258,"Oil, palm kernel"
+2577,Palm Oil,257,"Oil, palm"
+2578,Coconut Oil,252,"Oil, coconut (copra)"
+2579,Sesameseed Oil,290,"Oil, sesame"
+2580,Olive Oil,261,"Oil, olive, virgin"
+2581,Ricebran Oil,36,"Oil, rice bran"
+2582,Maize Germ Oil,60,"Oil, maize"
+2586,"Oilcrops Oil, Other",340,"Oil, vegetable origin nes"
+2590,Soyabean Cake,238,"Cake, soybeans"
+2591,Groundnut Cake,245,"Cake, groundnuts"
+2592,Sunflowerseed Cake,269,"Cake, sunflower"
+2593,Rape and Mustard Cake,272,"Cake, rapeseed"
+2594,Cottonseed Cake,332,"Cake, cottonseed"
+2595,Palmkernel Cake,259,"Cake, palm kernel"
+2596,Copra Cake,253,"Cake, copra"
+2597,Sesameseed Cake,291,"Cake, sesame seed"
+2598,"Oilseed Cakes, Other",335,"Cake, linseed"
+2600,Brans,17,"Bran, wheat"
+2601,Tomatoes and products,388,Tomatoes
+2602,Onions,403,"Onions, dry"
+2605,"Vegetables, Other",463,"Vegetables, fresh nes"
+2611,"Oranges, Mandarines",490,Oranges
+2612,"Lemons, Limes and products",497,Lemons and limes
+2613,Grapefruit and products,507,Grapefruit (inc. pomelos)
+2614,"Citrus, Other",512,"Fruit, citrus nes"
+2615,Bananas,486,Bananas
+2616,Plantains,489,Plantains
+2617,Apples and products,515,Apples
+2618,Pineapples and products,574,Pineapples
+2619,Dates,577,Dates
+2620,Grapes and products (excl wine),560,Grapes
+2625,"Fruits, Other",603,"Fruit, tropical fresh nes"
+2630,Coffee and products,656,"Coffee, green"
+2633,Cocoa Beans and products,661,"Cocoa, beans"
+2635,Tea (including mate),667,Tea
+2640,Pepper,687,Pepper (piper spp.)
+2641,Pimento,689,"Chillies and peppers, dry"
+2642,Cloves,698,Cloves
+2645,"Spices, Other",723,"Spices, nes"
+2655,Wine,564,Wine
+2656,Beer,51,Beer of barley
+2657,"Beverages, Fermented",51,Beer of barley
+2658,"Beverages, Alcoholic",634,"Beverages, distilled alcoholic"
+2659,"Alcohol, Non-Food",634,"Beverages, distilled alcoholic"
+2661,Cotton lint,767,Cotton lint
+2662,Jute,780,Jute
+2663,Jute-Like Fibres,782,"Bastfibres, other"
+2664,"Soft-Fibres, Other",771,Flax fibre raw
+2665,Sisal,789,Sisal
+2666,Abaca,809,Manila fibre (abaca)
+2667,"Hard Fibres, Other",821,Fibre crops nes
+2671,Tobacco,826,"Tobacco, unmanufactured"
+2672,Rubber,836,"Rubber, natural"
+2680,Infant food,109,Infant food
+2804,Rice (Paddy Equivalent),27,"Rice, paddy"
+2731,Bovine Meat,867,"Meat, cattle"
+2732,Mutton & Goat Meat,1017,"Meat, goat"
+2733,Pigmeat,1035,"Meat, pig"
+2734,Poultry Meat,1058,"Meat, chicken"
+2735,"Meat, Other",1166,"Meat, nes"
+2736,"Offals, Edible",868,"Offals, edible, cattle"
+2737,"Fats, Animals, Raw",1037,"Fat, pigs"
+2744,Eggs,1062,"Eggs, hen, in shell"
+2745,Honey,1182,"Honey, natural"
+2746,Wool (Clean Eq.),988,"Wool, degreased"
+2747,Silk,1186,Silk raw
+2748,Hides and skins,920,"Hides, cattle, wet salted"
+2749,Meat Meal,1173,"Meal, meat"
+2848,Milk - Excluding Butter,882,"Milk, whole fresh cow"
+2545,Sugar aggregated,162,Sugar Raw Centrifugal
