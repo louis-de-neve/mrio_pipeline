@@ -3,12 +3,17 @@ R(deprecated)/*
 processing/__pycache__/*
 __pycache__/*
 results/*
+temp.txt
 input_data/deprecated/*
 input_data/FoodBalanceSheets_E_All_Data_(Normalized).csv
 input_data/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv
 input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv
 input_data/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).csv
+input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv
+input_data/CommodityBalances_(non-food)_(-2013_old_methodology)_E_All_Data_(Normalized).csv
 input_data/FoodBalanceSheets_E_All_Data_(Normalized).zip
 input_data/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip
 input_data/Production_Crops_Livestock_E_All_Data_(Normalized).zip
 input_data/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip
+input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).zip
+input_data/CommodityBalances_(non-food)_(-2013_old_methodology)_E_All_Data_(Normalized).zip

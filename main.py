@@ -22,7 +22,7 @@ import os
 
 # CONFIG
 # Select years for which to calculate the results 
-YEARS = list(range(2014, 2024))
+YEARS = list(range(2010, 2024))
 
 # Select a conversion method
 # inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
@@ -90,7 +90,7 @@ def main():
     for year in YEARS:
         print(f"\nProcessing year: {year}")
         
-        hist = "Historic" if year < 2014 else ""
+        hist = "Historic" if year < 2012 else ""
 
         if (0 in PIPELINE_COMPONENTS) or (2 in PIPELINE_COMPONENTS):
             calculate_trade_matrix(

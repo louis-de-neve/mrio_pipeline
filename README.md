@@ -46,6 +46,8 @@ Please cite appropriately when using this code.
     - [FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip)
     - [FoodBalanceSheets_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/FoodBalanceSheets_E_All_Data_(Normalized).zip)
     - [Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip)
+    - [CommodityBalances_(non-food)_(-2013_old_methodology)_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/CommodityBalances_(non-food)_(-2013_old_methodology)_E_All_Data_(Normalized).zip)
+    - [SUA_Crops_Livestock_E_All_Data_(Normalized).zip](https://bulks-faostat.fao.org/production/SUA_Crops_Livestock_E_All_Data_(Normalized).zip)
 
 2. Configure settings in main.py
 
@@ -114,12 +116,14 @@ Whether to save intermediate results
 
 The pipeline expects the following data files in the input_data directory:
 
-### FAOSTAT Data
+### FAOSTAT Data (download above)
 - `Production_Crops_Livestock_E_All_Data_(Normalized).zip`
 - `FoodBalanceSheetsHistoric_E_All_Data_(Normalized).zip`
 - `FoodBalanceSheets_E_All_Data_(Normalized).zip`
 - `Trade_DetailedTradeMatrix_E_All_Data_(Normalized).zip`
-### Mapping and Conversion Files
+- `CommodityBalances_(non-food)_(-2013_old_methodology)_E_All_Data_(Normalized).zip`
+- `SUA_Crops_Livestock_E_All_Data_(Normalized).zip`
+### Mapping and Conversion Files (provided)
 - `primary_item_map_feed.csv`
 - `CB_to_primary_items_map.csv`
 - `CB_items_split.csv`
