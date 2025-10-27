@@ -9,6 +9,7 @@ Please cite ;-)
 Re-written in Python, October 2025 by Louis De Neve
 """
 
+import os
 from pathlib import Path
 
 from processing.unzip_data import unzip_data
@@ -16,13 +17,17 @@ from processing.calculate_trade_matrix import calculate_trade_matrix
 from processing.animal_products_to_feed import animal_products_to_feed
 from processing.calculate_area import calculate_area
 
-import os
+from provenance._consumption_provenance import main as consumption_provenance_main
+from provenance._get_impacts import get_impacts as get_impacts_main
+from provenance._process_dat import main as process_dat_main
+# from provenance.global_commodity_impacts import main as global_commodity_impacts_main
 
 
 
 # CONFIG
 # Select years for which to calculate the results 
-YEARS = list(range(2010, 2024))
+YEARS = list(range(2009, 2015))
+YEARS = [2013]
 
 # Select a conversion method
 # inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
@@ -37,11 +42,17 @@ PREFER_IMPORT = "import"
 # select working directory
 WORKING_DIR = '/home/louis/Documents/zoology/pipeline/mrio'
 
-# 0 = all, 1 = unzip, 2 = trade matrix, 3 = animal products to feed, 4 = area calculation
+# 0 = all, 1 = unzip, 2 = trade matrix, 3 = animal products to feed, 4 = area calculation, 5 = country impacts
 PIPELINE_COMPONENTS:list = [0]
 
-SAVE_INTERMEDIATES = True  # Whether to save intermediate results or not
 
+
+from pandas import read_excel
+cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
+COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
+# COUNTRIES = ["GBR"]
+
+##########################################################
 
 
 def main():
@@ -53,26 +64,21 @@ def main():
         1: "Unzipping data",
         2: "Trade matrix calculation",
         3: "Animal products to feed calculation",
-        4: "Area calculation"}
+        4: "Area calculation",
+        5: "Country-level impact calculation"}
 
     print(f"""\nStarting MRIO calculations with options:
     Working directory: {WORKING_DIR}
     Using {CONVERSION_OPTION} as the conversion option
     Preferring {PREFER_IMPORT} data
     Running pipeline component {[p for p in PIPELINE_COMPONENTS]}: {[component_dict[p] for p in PIPELINE_COMPONENTS]} 
-    Saving intermediate results: {SAVE_INTERMEDIATES}
 
     Years to process: {YEARS}
     """)
 
     # Create directories
     results_dir = Path("./results")
-    intermediate_results_dir = Path("./results/intermediate")
-    final_results_dir = Path("./results/final")
-
     results_dir.mkdir(exist_ok=True)
-    intermediate_results_dir.mkdir(exist_ok=True)
-    final_results_dir.mkdir(exist_ok=True)
 
 
     if (0 in PIPELINE_COMPONENTS) or (1 in PIPELINE_COMPONENTS):
@@ -88,6 +94,12 @@ def main():
         return
     
     for year in YEARS:
+
+        year_dir = Path(f"./results/{year}")
+        year_dir.mkdir(exist_ok=True)
+        mrio_dir = Path(f"./results/{year}/.mrio")
+        mrio_dir.mkdir(exist_ok=True)
+
         print(f"\nProcessing year: {year}")
         
         hist = "Historic" if year < 2012 else ""
@@ -107,23 +119,32 @@ def main():
                 historic=hist)
             
         if (0 in PIPELINE_COMPONENTS) or (4 in PIPELINE_COMPONENTS):
-            calculate_area(
-                prefer_import=PREFER_IMPORT,
-                conversion_opt=CONVERSION_OPTION,
-                year=year)
+            if 4 in PIPELINE_COMPONENTS:
+                print("    MRIO area calculation is deprecated")
+            else:
+                print("   MRIO complete") 
+            
+            # calculate_area(
+            #     prefer_import=PREFER_IMPORT,
+            #     conversion_opt=CONVERSION_OPTION,
+            #     year=year)
+            
+
+        if (0 in PIPELINE_COMPONENTS) or (5 in PIPELINE_COMPONENTS):
+            print("    Processing country-level impacts...")
+            for country in COUNTRIES:
+                print(f"    Processing country: {country}")
+                
+                cons, feed = consumption_provenance_main(year, country)
+
+                print("         Calculating impacts")
+                get_impacts_main(feed, year, country, "feed_impacts_wErr.csv")  
+                get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv")  
+                print("         Organising data")   
+                process_dat_main(year, country)
 
         print(f"Year {year} processing completed successfully\n")
 
-
-    if (not SAVE_INTERMEDIATES) and (PIPELINE_COMPONENTS in [0, 4]):
-        print("\nRemoving intermediate files...")
-        for year in YEARS:
-            intermediate_file = f"./results/intermediate/{year}_TradeMatrix_{PREFER_IMPORT}_{CONVERSION_OPTION}.csv"
-            if Path(intermediate_file).exists():
-                os.remove(intermediate_file)
-            intermediate_file = f"./results/intermediate/{year}_TradeMatrixFeed_{PREFER_IMPORT}_{CONVERSION_OPTION}.csv"
-            if Path(intermediate_file).exists():
-                os.remove(intermediate_file)
 
 
 

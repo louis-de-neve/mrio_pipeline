@@ -17,7 +17,7 @@ def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=201
     print("    Loading area data...")
         # File paths
     yield_data_file = "input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv"
-    trade_matrix_file = f"results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
+    trade_matrix_file = f"results/{year}/.mrio/TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
     
     # Check if trade matrix file exists
     if not Path(trade_matrix_file).exists():
@@ -64,6 +64,6 @@ def calculate_area(prefer_import="import", conversion_opt="dry_matter", year=201
     
     
     print("    Saving final results...")
-    output_filename = f"results/final/TradeMatrixFeed_{prefer_import}_{conversion_opt}_{year}_Area.csv"
+    output_filename = f"results/{year}/.mrio/TradeMatrixFeed_{prefer_import}_{conversion_opt}_{year}_Area.csv"
     output_data.to_csv(output_filename, index=False)
 

@@ -39,6 +39,8 @@ def unzip_data(path="./input_data"):
     unnecessary_patterns = ["*Flags.csv", "*AreaCodes.csv", "*Elements.csv", "*ItemCodes.csv"]
     for pattern in unnecessary_patterns:
         for file in Path(path).glob(pattern):
+            if str(file)[11:14] == "SUA" and pattern == "*ItemCodes.csv":
+                continue
             try:
                 file.unlink()
             except Exception as e:

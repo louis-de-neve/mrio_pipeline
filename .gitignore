@@ -1,6 +1,7 @@
 .vscode/*
-R(deprecated)/*
+.R(deprecated)/*
 processing/__pycache__/*
+provenance/__pycache__/*
 __pycache__/*
 results/*
 temp.txt

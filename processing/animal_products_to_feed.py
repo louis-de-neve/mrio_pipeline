@@ -58,8 +58,8 @@ def animal_products_to_feed(prefer_import="import", conversion_opt="dry_matter",
     animals_filename = "input_data/Production_Crops_Livestock_E_All_Data_(Normalized).csv"
     weighing_filename = "input_data/weighing_factors.csv"
 
-    trade_matrix_filename = f"results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
-    output_filename = f"results/intermediate/{year}_TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
+    trade_matrix_filename = f"results/{year}/.mrio/TradeMatrix_{prefer_import}_{conversion_opt}.csv"
+    output_filename = f"results/{year}/.mrio/TradeMatrixFeed_{prefer_import}_{conversion_opt}.csv"
 
     if not Path(trade_matrix_filename).exists():
         raise FileNotFoundError(f"Trade matrix file not found: {trade_matrix_filename}")

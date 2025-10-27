@@ -144,7 +144,7 @@ def calculate_trade_matrix(
         historic="Historic"):
     """Calculate Trade Matrix module for MRIO pipeline"""
 
-    output_filename = f"results/intermediate/{year}_TradeMatrix_{prefer_import}_{conversion_opt}.csv"
+    output_filename = f"results/{year}/.mrio/TradeMatrix_{prefer_import}_{conversion_opt}.csv"
 
     print("    Loading trade data...")
 
@@ -312,7 +312,7 @@ def calculate_trade_matrix(
     ###################################
 
     sugar_trade_data = transformed_data[transformed_data["Item_Code"] == 2545]
-    print(transformed_data)
+
     sugar_processing = sugar_processing[
         (sugar_processing["Item_Code"].isin([2536, 2537]))&
         (sugar_processing["Element_Code"] == 5131)&
