@@ -5,7 +5,6 @@ Barley,44,4,barley,barl,brl,brl,,Grains,,Grains,Grains,Grains,Grains,Grains,"Gra
 Maize,56,3,maize,maiz,mze,mze,,Grains,,Grains,Grains,Grains,Grains,Grains,"Grains, roots, starchy carbohydrates"
 Oats,75,8,other cereals,ocer,oce,oat,,Grains,,Grains,Grains,Grains,Grains,Grains,"Grains, roots, starchy carbohydrates"
 Quinoa,92,8,other cereals,ocer,oce,,Cereals,Grains,,Grains,Grains,Grains,Grains,Grains,"Grains, roots, starchy carbohydrates"
-,,,,,,,,,,,,,,,
 Grain; mixed,103,8,other cereals,ocer,oce,,Cereals,Grains,,Grains,Grains,Grains,Grains,Grains,"Grains, roots, starchy carbohydrates"
 Potatoes,116,9,potato,pota,rt1,wpo,,Roots and tubers,,Roots and tubers,Roots and tubers,Roots and tubers,Roots and tubers,Roots and tubers,"Grains, roots, starchy carbohydrates"
 Beans; dry,176,14,bean,bean,pls,phb,,"Legumes, nuts, and seeds",,"Other legumes, nuts, and seeds","Legumes, nuts, and seeds","Legumes, nuts, and seeds",Legumes and pulses,Legumes and pulses,"Legumes, beans, nuts"
@@ -93,7 +92,6 @@ Coffee; green,656,32,arabica coffee,acof,cc2,cof,,Stimulants,,Coffee,Coffee,Coff
 Cocoa; beans,661,34,cocoa,coco,cc2,coc,,Stimulants,,Cocoa,Cocoa,Cocoa,Cocoa,Cocoa,Stimulants and spices
 Tea,667,35,tea,teas,cc2,tea,,Stimulants,,Tea and Maté,Tea and maté,Tea and maté,Tea and maté,Tea and maté,Stimulants and spices
 Maté,671,35,tea,teas,cc2,,Stimulants,Stimulants,,Tea and Maté,Tea and maté,Tea and maté,Tea and maté,Tea and maté,Stimulants and spices
-MatÃ©,671,35,tea,teas,cc2,,Stimulants,Stimulants,,Tea and Maté,Tea and maté,Tea and maté,Tea and maté,Tea and maté,Stimulants and spices
 Pepper (piper spp.),687,41,rest of crops,rest,nes,,Other,Spices,,Other spices,Spices,Spices,Spices,Spices,Stimulants and spices
 Chillies and peppers; dry,689,41,vegetables,vege,veg,,Solanaceae,Vegetables,,Vegetables,Vegetables,Vegetables,Vegetables,Vegetables,Fruit and vegetables
 Vanilla,692,42,rest of crops,rest,nes,,Other,Spices,,Vanilla,Spices,Spices,Spices,Spices,Stimulants and spices
@@ -103,7 +101,6 @@ Nutmeg; mace and cardamoms,702,45,rest of crops,rest,nes,,Other,Spices,,Other sp
 Anise; badian; fennel; coriander,711,46,rest of crops,rest,nes,,Other,Spices,,Other spices,Spices,Spices,Spices,Spices,Stimulants and spices
 Ginger,720,47,rest of crops,rest,nes,,Other,Spices,,Other spices,Spices,Spices,Spices,Spices,Stimulants and spices
 Spices nes,723,48,rest of crops,rest,nes,,Other,Spices,,Other spices,Spices,Spices,Spices,Spices,Stimulants and spices
-,,,,,,,,,,,,,,,
 Sorghum,83,7,sorghum,sorg,srg,srg,,Grains,,Grains,Grains,Grains,Grains,Grains,"Grains, roots, starchy carbohydrates"
 Sweet potatoes,122,10,sweet potato,swpo,rt1,spo,,Roots and tubers,,Roots and tubers,Roots and tubers,Roots and tubers,Roots and tubers,Roots and tubers,"Grains, roots, starchy carbohydrates"
 Sugar beet,157,29,sugarbeet,sugb,sub,sub,,Sugar crops,,Sugar crops,Sugar crops,Sugar crops,Sugar beet,Sugar beet,Sugar crops
@@ -137,7 +134,6 @@ Kapokseed in shell,311,39,tropical fruit,trof,nes,,Fruit_and_nuts,"Legumes, nuts
 Cassava leaves,378,12,cassava,cass,rt2,csv,,"Legumes, nuts, and seeds",,"Other legumes, nuts, and seeds","Legumes, nuts, and seeds","Legumes, nuts, and seeds",Other,Other,"Legumes, beans, nuts"
 Karite nuts (sheanuts),263,40,temperate fruit,temf,frt,,Fruit_and_nuts,"Legumes, nuts, and seeds",,"Other legumes, nuts, and seeds","Legumes, nuts, and seeds","Legumes, nuts, and seeds",Other,Other,"Legumes, beans, nuts"
 Bambara beans,203,21,groundnut,grou,nes,,Fruit_and_nuts,"Legumes, nuts, and seeds",,"Other legumes, nuts, and seeds","Legumes, nuts, and seeds","Legumes, nuts, and seeds",Other,Other,"Legumes, beans, nuts"
-,,,,,,,,,,,,,,,
 Meat; cattle,867,-99,ruminant meat,past,beef,Ruminant,,Ruminant meat,bvmeat,Cattle meat,Ruminant meat,,Ruminant meat,Ruminant meat,Ruminant meat
 Milk; whole fresh cow,882,-99,dairy,past,dairy,Ruminant,,Dairy,bvmilk,Dairy,Dairy,,Dairy,Dairy,Dairy and eggs
 Meat; sheep,977,-99,ruminant meat,past,sheep,Ruminant,,Ruminant meat,sgmeat,Sheep and goat meat,Ruminant meat,,Ruminant meat,Ruminant meat,Ruminant meat

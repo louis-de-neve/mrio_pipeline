@@ -9,16 +9,6 @@ import numpy as np
 import os
     
 
-def area_code_to_iso(code, area_codes):
-    iso3 = area_codes[area_codes["FAOSTAT"] == code]["ISO3"].values[0]
-    return iso3
-
-
-def item_code_to_product(code, item_codes):
-    vals = item_codes[item_codes["Item Code"] == code]["Item"].values
-    product = vals[0] if len(vals) > 0 else None
-    return product
-
 
 def add_cols(indf, area_codes, item_codes):
     ac = area_codes[["ISO3", "FAOSTAT"]].rename(columns={"ISO3":"Country_ISO", "FAOSTAT":"Producer_Country_Code"})
@@ -68,12 +58,9 @@ def calculate_conversion_factors(conversion_opt, content_factors, item_map_for_c
         return conversion_factors
 
 
-def main(year, country_of_interest):
+def main(year, country_of_interest, sua):
 
-    country_savefile_path = f"./results/{year}/{country_of_interest}"
-    if not os.path.isdir(country_savefile_path):
-        os.makedirs(country_savefile_path)   
-
+    
     datPath = "./input_data"
     trade_feed = f"./results/{year}/.mrio/TradeMatrixFeed_import_dry_matter.csv"
     trade_nofeed = f"./results/{year}/.mrio/TradeMatrix_import_dry_matter.csv"
@@ -97,13 +84,21 @@ def main(year, country_of_interest):
     add_palestine = pd.DataFrame({"ISO3":["PSE"], "FAOSTAT":[299]})
     area_codes = pd.concat([area_codes, add_palestine], ignore_index=True)
 
-    sua = pd.read_csv(f"{datPath}/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
+    
     fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==5141)]
-
-
-
-
     fs = fs[fs.Year == year]
+
+    if len(fs) == 0:
+        print(f"         No food supply data for ({area_codes[area_codes["ISO3"] == country_of_interest]["LIST NAME"].values[0]}) in  {year}")
+        return pd.DataFrame(), pd.DataFrame()
+
+
+    country_savefile_path = f"./results/{year}/{country_of_interest}"
+    if not os.path.isdir(country_savefile_path):
+        os.makedirs(country_savefile_path)   
+
+
+
     fserr = fs.copy()
 
     # ERROR CALCULATION - commented out for now
@@ -188,11 +183,15 @@ def main(year, country_of_interest):
     cons_prov = (cons_prov
         .drop(columns=["value_primary", "value_primary_err"])
         .dropna(subset=["provenance"]))
+    cons_prov["Value"] = cons_prov["Ratio"]
 
 
-    primary_consumption_anim = primary_consumption[primary_consumption.primary_item_code.isin(weighing_factors.Item_Code)]
-    
+    # provenance of feed
     ##################################################
+    print("         Calculating feed provenance")
+
+
+    primary_consumption_anim = primary_consumption[primary_consumption.primary_item_code.isin(weighing_factors.Item_Code)]   
 
     primary_consumption_anim = primary_consumption_anim.merge(weighing_factors, left_on="primary_item_code", right_on="Item_Code", how="left")
     primary_consumption_anim['value_primary'] = primary_consumption_anim['value_primary'] * primary_consumption_anim['Weighing factors']
@@ -208,45 +207,26 @@ def main(year, country_of_interest):
         .reset_index(drop=True))
     prov_mat_feed.loc[prov_mat_feed["Animal_Product_Code"]==0, "Animal_Product_Code"] = np.nan
 
-
     ##################################################
 
-    # provenance of feed
-    feed_prov = pd.DataFrame()
-    # primary_consumption_anim = primary_consumption_anim[primary_consumption_anim.primary_item_code==882] # REMOVE ##################
-    # get animal product
-    print("         Calculating feed provenance")
-
-    for row in primary_consumption_anim.iterrows():
-        primary_item_code, value_primary, item_name, value_primary_err = row[1]
-        source_countries = human_consumed_import_ratios[
-            human_consumed_import_ratios.Item_Code == primary_item_code]
-        
-        # source_countries = source_countries[source_countries.Producer_Country_Code.isin([229,104,68])] # REMOVE ##################
-
-        # prov_mat_feed = prov_mat_feed.merge
-
-        # get countries that produce the animal product
-        for rowx in source_countries.iterrows():
-            cRatio = rowx[1].Ratio
-            country_code = rowx[1].Producer_Country_Code
-            cVal = value_primary * cRatio
-            cVal_err = value_primary_err * cRatio
-            # where do they get their feed from?
-            dfx = prov_mat_feed[
-                (prov_mat_feed.Animal_Product_Code==primary_item_code)\
-                    &(prov_mat_feed.Consumer_Country_Code==country_code)].copy()
-
-            dfx["provenance"] = dfx.prov_ratio * cVal
-            if dfx["provenance"].sum() > 0 and cVal > 0:
-                dfx["provenance_err"] = dfx["provenance"] * np.sqrt(1+(cVal_err/cVal)**2)
-            dfx["Country_ISO"] = [area_code_to_iso(code, area_codes) for code in dfx.Producer_Country_Code]
-            dfx["Item"] = [item_code_to_product(code, item_codes) for code in dfx.Item_Code]
-            dfx["Animal_Product"] = item_name
-            feed_prov = pd.concat([feed_prov, dfx])
-    
-    cons_prov["Value"] = cons_prov["Ratio"]
-
+    animal_codes = primary_consumption_anim.primary_item_code.unique()
+    sc2 = human_consumed_import_ratios[human_consumed_import_ratios.Item_Code.isin(animal_codes)]
+    sc2 = sc2.merge(primary_consumption_anim, left_on="Item_Code", right_on="primary_item_code", how="left")
+    sc2["cVal"] = sc2["Ratio"] * sc2["value_primary"]
+    sc2["cVal_err"] = sc2["Ratio"] * sc2["value_primary_err"]
+    sc2["valid"] = sc2.Item_Code.astype(int).astype(str) +"-"+ sc2.Producer_Country_Code.astype(int).astype(str)
+    sc2["Animal_Product"] = sc2.item_name
+    sc2 = sc2[["valid", "cVal", "cVal_err", "Animal_Product"]]
+    prov_mat_feed = prov_mat_feed[~prov_mat_feed.Animal_Product_Code.isna()]
+    prov_mat_feed["valid"] = prov_mat_feed.Animal_Product_Code.astype(int).astype(str) + "-" + prov_mat_feed.Consumer_Country_Code.astype(str)
+    dfx = prov_mat_feed[prov_mat_feed["valid"].isin(sc2["valid"])]
+    dfx = dfx.merge(sc2, on="valid", how="left")
+    dfx["provenance"] = dfx.prov_ratio * dfx.cVal
+    dfx.loc[dfx.cVal>0, "provenance_err"] = dfx.loc[dfx.cVal>0,"provenance"] * np.sqrt(1+(dfx.loc[dfx.cVal>0,"cVal_err"]/dfx.loc[dfx.cVal>0,"cVal"])**2)
+    dfx.drop(columns=["valid", "cVal", "cVal_err"], inplace=True)
+    dfx = dfx.merge(area_codes[["FAOSTAT", "ISO3"]].rename(columns={"ISO3":"Country_ISO", "FAOSTAT":"Producer_Country_Code"}), on="Producer_Country_Code", how="left")
+    dfx = dfx.merge(item_codes[["Item Code", "Item"]].rename(columns={"Item Code":"Item_Code",}), on="Item_Code", how="left")
+    feed_prov = dfx[(dfx.Value > 1E-8)&(dfx.provenance > 0)]
 
 
     cons_prov = cons_prov[(cons_prov.Ratio > 1E-8)&(cons_prov.provenance > 0)]

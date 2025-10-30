@@ -4,6 +4,7 @@ Created on Wed Mar 15 16:41:04 2023
 
 @author: tom
 """
+import warnings
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,14 +13,20 @@ try:
 except ModuleNotFoundError:
     import data_utils
 import os
+from tqdm import tqdm
 
 #%%
-def get_impacts(prov, year, coi, filename):
+def get_impacts(wdf, year, coi, filename):
 
-    
+    # year=2013
+    # coi = "AFG"
+    # filename = "feed_impacts_wErr"
+    #wdf = pd.read_csv(f"./results/{year}/{coi}/feed.csv")
+
+
+
     country_savefile_path = f"./results/{year}/{coi}"
     datPath = "./input_data"
-
 
     bd_path = f"{datPath}/country_opp_cost_v6.csv"
     rums = {"Meat; cattle" : "bvmeat",
@@ -31,25 +38,44 @@ def get_impacts(prov, year, coi, filename):
     
     bd_opp_cost = pd.read_csv(bd_path, index_col = 0)
     
-    prov = prov[np.logical_not(prov.Item.isna())]
-    prov = prov[prov.Value >= 0.015]
-    item_codes = data_utils.get_item_codes(datPath)
-    area_codes = data_utils.get_area_codes(datPath)
-    code_list = data_utils.fbs_sua_item_codes(datPath)
-    coi_code = area_codes[area_codes["ISO3"] == coi][
-        "FAOSTAT"].values[0]
+    wdf = wdf[np.logical_not(wdf.Item.isna())]
+    wdf = wdf[wdf.Value >= 0.015]
+    # area_codes = data_utils.get_area_codes(datPath)
+    # item_codes = data_utils.get_item_codes(datPath)
+    # code_list = data_utils.fbs_sua_item_codes(datPath)
+    # coi_code = area_codes[area_codes["ISO3"] == coi][
+    #     "FAOSTAT"].values[0]
     wwf = data_utils.get_wwf_pbd(datPath)
-    SM_wwf_items = pd.read_csv(f"{datPath}/schwarzmueller_wwf.csv",index_col = 0)
-    get_wwf_name = lambda item: SM_wwf_items[SM_wwf_items.Item_Code_FAO==item][
-                                                        "WWF_cat"].values[0]
+    Sm_wwf_items = pd.read_csv(f"{datPath}/schwarzmueller_wwf.csv",index_col = 0)
+
     fao_prod = pd.read_csv(f"{datPath}/Production_Crops_Livestock_E_All_Data_(Normalized).csv", encoding = "latin-1", low_memory=False)
     fao_prod = fao_prod[fao_prod.Year == year]
     yield_dat = fao_prod[fao_prod.Element == "Yield"]
-    
     crop_db = pd.read_csv(f"{datPath}/crop_db.csv", index_col = 0)
-    wdf = prov.copy()
-    for i, row in enumerate(wdf.iterrows()):
 
+    wdf = (wdf
+        .merge(Sm_wwf_items[["Item_Code_FAO", "WWF_cat"]], left_on="Item_Code", right_on="Item_Code_FAO", how="left")
+        .drop(columns=["Item_Code_FAO"]))
+
+
+    oc_past = bd_opp_cost.past
+    oc_past = oc_past[oc_past >0]
+    oc_past = np.exp(np.log(oc_past).mean())
+    oc_past_err = bd_opp_cost.past_err
+    oc_past_err = oc_past_err[oc_past_err >0]
+    oc_past_err = np.exp(np.log(oc_past_err).mean())
+    oc_crop = bd_opp_cost.crop
+    oc_crop = oc_crop[oc_crop >0]
+    oc_crop = np.exp(np.log(oc_crop).mean())
+    oc_crop_err = bd_opp_cost.crop_err
+    oc_crop_err = oc_crop_err[oc_crop_err >0]
+    oc_crop_err = np.exp(np.log(oc_crop_err).mean())
+
+
+
+
+    for row in tqdm(wdf.iterrows()):
+        
         idx = row[0]
         row = row[1]
         producer_iso = row.Country_ISO
@@ -60,9 +86,11 @@ def get_impacts(prov, year, coi, filename):
         provenance_err = row.provenance_err
         # provenance_err = 0
         is_animal = (row.Animal_Product == "Primary")
-        wwf_name = get_wwf_name(item_code)
+        wwf_name = row.WWF_cat
+        
         impacts = wwf[(wwf.Country_ISO==producer_iso)
                       &(wwf.Product==wwf_name)]
+
         # do seperate yield and LU calc
         item_yields = yield_dat[yield_dat["Item Code"] == item_code]
         if len(item_yields) == 0:
@@ -87,9 +115,12 @@ def get_impacts(prov, year, coi, filename):
 
         # if there is no impact data, use the world value instead
         if impacts.size == 0:
+            # print("No impact data for", item_name, item_code, "in", producer_iso,)
             impacts = wwf[(wwf.Country_ISO=="all-r")
                           &(wwf.Product==wwf_name)]
+            # print(wwf.Country_ISO.unique(), wwf_name)
         for impact in impacts.columns:
+            print(impacts.columns)
             impact_val = impacts[impact].values[0]
             impact_val_percerr = 0
             if "avg" in impact:
@@ -128,18 +159,7 @@ def get_impacts(prov, year, coi, filename):
             wdf.loc[idx, "FAO_land_calc_m2"] = wdf.loc[idx, "Arable_avg"+ "_calc"] = impacts[
                 "Arable_avg"].values[0] * (provenance_val * 1000)
         # do biodiversity
-        oc_past = bd_opp_cost.past
-        oc_past = oc_past[oc_past >0]
-        oc_past = np.exp(np.log(oc_past).mean())
-        oc_past_err = bd_opp_cost.past_err
-        oc_past_err = oc_past_err[oc_past_err >0]
-        oc_past_err = np.exp(np.log(oc_past_err).mean())
-        oc_crop = bd_opp_cost.crop
-        oc_crop = oc_crop[oc_crop >0]
-        oc_crop = np.exp(np.log(oc_crop).mean())
-        oc_crop_err = bd_opp_cost.crop_err
-        oc_crop_err = oc_crop_err[oc_crop_err >0]
-        oc_crop_err = np.exp(np.log(oc_crop_err).mean())
+
         gz_name = 0
         opp_cost_err = oc_crop_err
         if is_animal == True:
@@ -184,7 +204,6 @@ def get_impacts(prov, year, coi, filename):
                 continue
             else:
                 opp_cost_val = opp_cost_val.unique().squeeze()
-        import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=RuntimeWarning)
             wdf.loc[idx, "bd_opp_cost_m2"] = opp_cost_val / 1000000 # convert to per m2

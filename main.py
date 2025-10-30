@@ -9,8 +9,10 @@ Please cite ;-)
 Re-written in Python, October 2025 by Louis De Neve
 """
 
+
 import os
 from pathlib import Path
+import time
 
 from processing.unzip_data import unzip_data
 from processing.calculate_trade_matrix import calculate_trade_matrix
@@ -18,7 +20,7 @@ from processing.animal_products_to_feed import animal_products_to_feed
 from processing.calculate_area import calculate_area
 
 from provenance._consumption_provenance import main as consumption_provenance_main
-from provenance._get_impacts import get_impacts as get_impacts_main
+from provenance._get_impacts_bd import get_impacts as get_impacts_main
 from provenance._process_dat import main as process_dat_main
 # from provenance.global_commodity_impacts import main as global_commodity_impacts_main
 
@@ -26,8 +28,7 @@ from provenance._process_dat import main as process_dat_main
 
 # CONFIG
 # Select years for which to calculate the results 
-YEARS = list(range(2009, 2015))
-YEARS = [2013]
+YEARS = list(range(1986, 2022))
 
 # Select a conversion method
 # inputs: ("dry_matter", "Energy", "Protein", "Fiber_TD", "Zinc", "Iron", "Calcium",
@@ -47,10 +48,10 @@ PIPELINE_COMPONENTS:list = [0]
 
 
 
-from pandas import read_excel
+from pandas import read_excel, read_csv
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
 COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
-# COUNTRIES = ["GBR"]
+COUNTRIES = ["GBR", "USA", "IND", "BRA", "JPN", "UGA"]
 
 ##########################################################
 
@@ -65,7 +66,7 @@ def main():
         2: "Trade matrix calculation",
         3: "Animal products to feed calculation",
         4: "Area calculation",
-        5: "Country-level impact calculation"}
+        5: "Country-level provenance calculation",}
 
     print(f"""\nStarting MRIO calculations with options:
     Working directory: {WORKING_DIR}
@@ -131,17 +132,32 @@ def main():
             
 
         if (0 in PIPELINE_COMPONENTS) or (5 in PIPELINE_COMPONENTS):
-            print("    Processing country-level impacts...")
+            print("    Processing country-level provenance and impacts...")
+            missing_items = []
+            sua = read_csv(f"./input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
+
             for country in COUNTRIES:
                 print(f"    Processing country: {country}")
-                
-                cons, feed = consumption_provenance_main(year, country)
+                t0 = time.perf_counter()
+                cons, feed = consumption_provenance_main(year, country, sua)
+                if len(cons) == 0:
+                    continue
+                bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv")  
+                bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv") 
+                mi = process_dat_main(year, country, bh, bf)
+                missing_items.extend(mi)
+                t1 = time.perf_counter()
+                print(f"         Completed in {t1 - t0:.2f} seconds")
 
-                print("         Calculating impacts")
-                get_impacts_main(feed, year, country, "feed_impacts_wErr.csv")  
-                get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv")  
-                print("         Organising data")   
-                process_dat_main(year, country)
+            
+            # Save missing items to a file
+            missing_items_file = Path(f"./results/{year}/missing_items.txt")
+            with open(missing_items_file, "w") as f:
+                f.write("Missing items and their codes:\n")
+                for item, code in set(missing_items):
+                    f.write(f" - {item}: {code}\n")
+
+
 
         print(f"Year {year} processing completed successfully\n")
 

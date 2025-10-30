@@ -3,9 +3,10 @@ import pandas as pd
 import numpy as np
 import os
 import warnings
+import time
 
+def main(year, coi_iso, bh, bf):
 
-def main(year, coi_iso):
     datPath = "./input_data"
     scenPath = f"./results/{year}/{coi_iso}"
 
@@ -19,42 +20,52 @@ def main(year, coi_iso):
     grouping = "group_name_v7"
     
     # coi = 229
-    
-    #%%
+
     cropdb = pd.read_csv(f"{datPath}/crop_db.csv")
-    bd_opp_cost = pd.read_csv(bd_path, index_col = 0)
     
-    bh = pd.read_csv(f"{scenPath}/human_consumed_impacts_wErr.csv", index_col = 0)
-    bf = pd.read_csv(f"{scenPath}/feed_impacts_wErr.csv", index_col = 0)
-     
-    #%%
+    # bh = pd.read_csv(f"{scenPath}/human_consumed_impacts_wErr.csv", index_col = 0)
+    # bf = pd.read_csv(f"{scenPath}/feed_impacts_wErr.csv", index_col = 0)
+    # print(bf)
+
     bf["bd_opp_cost_calc"] = bf["bd_opp_cost_calc"].mask(bf["bd_opp_cost_calc"].lt(0),0)
     
     bh = bh[np.logical_not(np.isinf(bh.FAO_land_calc_m2))]
-    bh.loc[:, "ItemT_Name"] = bh.loc[:, "Item"]
-    bh.loc[:, "ItemT_Code"] = bh.loc[:, "Item_Code"]
-    bh.loc[:, "Arable_m2"] = bh.FAO_land_calc_m2
-    bh.loc[:, "Pasture_m2"] = bh.Pasture_avg_calc.fillna(0)
+    bh["ItemT_Name"] = bh["Item"]
+    bh["ItemT_Code"] = bh["Item_Code"]
+    bh["Arable_m2"] = bh.FAO_land_calc_m2
+    bh["Pasture_m2"] = bh.Pasture_avg_calc.fillna(0)
     bh["bd_perc_err"] = bh["bd_opp_cost_calc_err"] / bh["bd_opp_cost_calc"]
     
     bf = bf[np.logical_not(np.isinf(bf.FAO_land_calc_m2))]
-    bf.loc[:, "ItemT_Code"] = bf.loc[:, "Animal_Product_Code"]
-    bf.loc[:, "ItemT_Name"] = bf.loc[:, "Animal_Product"]
-    bf.loc[:, "Arable_m2"] = bf.FAO_land_calc_m2
-    bf.loc[:, "Pasture_m2"] = 0
+    bf["ItemT_Code"] = bf["Animal_Product_Code"]
+    bf["ItemT_Name"] = bf["Animal_Product"]
+    bf["Arable_m2"] = bf.FAO_land_calc_m2
+    bf["Pasture_m2"] = 0
     bf["bd_perc_err"] = bf["bd_opp_cost_calc_err"] / bf["bd_opp_cost_calc"]
     bf = bf[~np.isinf(bf.bd_perc_err)]
     xdf = pd.concat([bh,bf])
     
-    xdfs_uk = xdf[xdf.Producer_Country_Code == coi].groupby("ItemT_Name").sum()
-    xdfs_os = xdf[~(xdf.Producer_Country_Code == coi)].groupby("ItemT_Name").sum()
+
+    lookup = xdf[["ItemT_Code", "ItemT_Name"]].drop_duplicates()
+
+
+    xdfs_uk = xdf[xdf.Producer_Country_Code == coi]
+    xdfs_os = xdf[~(xdf.Producer_Country_Code == coi)]
+    xdfs_uk = xdfs_uk[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code"]]
+    xdfs_os = xdfs_os[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code"]]
     
+    
+    xdfs_uk = xdfs_uk.groupby("ItemT_Name").sum()
+    xdfs_os = xdfs_os.groupby("ItemT_Name").sum()
+
+
     df_uk = pd.DataFrame()
-    
+    missing_items = []
     for item in xdfs_uk.index.tolist():
         x = xdfs_uk.loc[item]
         try:
-            df_uk.loc[item, "Group"] = cropdb[cropdb.Item == item][grouping].values[0]
+            item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
+            df_uk.loc[item, "Group"] = cropdb[cropdb.Item_Code == item_code][grouping].values[0]
             df_uk.loc[item, "Pasture_m2"] = x.Pasture_m2
             df_uk.loc[item, "Arable_m2"] = x.Arable_m2
             df_uk.loc[item, "Scarcity_weighted_water_l"] = x.SWWU_avg_calc.sum()
@@ -87,14 +98,15 @@ def main(year, coi_iso):
             df_uk.loc[item, "Cons_err"] = np.sqrt(np.nansum(bh[(bh.Item == item)&(bh.Producer_Country_Code == coi)].provenance_err ** 2))
             
         except IndexError:
-            print(f"Couldn't find {item} in the db")
+            item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
+            missing_items.append((item, item_code))
     
     df_os = pd.DataFrame()
-    count = 0
     for item in xdfs_os.index.tolist():
         x = xdfs_os.loc[item]
         try:
-            df_os.loc[item, "Group"] = cropdb[cropdb.Item == item][grouping].values[0]
+            item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
+            df_os.loc[item, "Group"] = cropdb[cropdb.Item_Code == item_code][grouping].values[0]
             df_os.loc[item, "Pasture_m2"] = x.Pasture_m2
             df_os.loc[item, "Arable_m2"] = x.Arable_m2
             df_os.loc[item, "Scarcity_weighted_water_l"] = x.SWWU_avg_calc.sum()
@@ -126,14 +138,16 @@ def main(year, coi_iso):
                 * np.sqrt(np.nansum(np.nansum([(fe_err)**2,(fo_err)**2])))
     
         except IndexError:
-            count += 1
-            # print(f"Couldn't find {item} in the db")
-    if count > 0:
-        print("         WARNING: Some items missing from database")
+            item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
+            missing_items.append((item, item_code))
+            
     kdf = pd.concat([df_uk,df_os])
     kdf = kdf.groupby([kdf.index, "Group"]).sum().reset_index()
 
-    df_uk.to_csv(f"{scenPath}/df_uk.csv")
+
+
+
+    df_uk.to_csv(f"{scenPath}/df_{coi_iso.lower()}.csv")
     df_os.to_csv(f"{scenPath}/df_os.csv")
     xdf.to_csv(f"{scenPath}/xdf.csv")
     
@@ -142,6 +156,8 @@ def main(year, coi_iso):
         kdf.columns = [_ if _ != "level_0" else "Item" for _ in kdf.columns]
     
     kdf.to_csv(f"{scenPath}/kdf.csv")
+    return missing_items
+
     
 if __name__ == "__main__":
     

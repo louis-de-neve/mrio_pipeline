@@ -115,7 +115,7 @@ Component options:
 - `2` = Trade matrix calculation
 - `3` = Animal products to feed calculation
 - `4` = Area calculation (deprecated)
-- `5` = Country-level impact calculation (as in [LIFE](https://github.com/thomasball42/food_LIFE))
+- `5` = Country-level impact calculations (as in [LIFE](https://github.com/thomasball42/food_LIFE))
 
 
 ## Required Data Files
