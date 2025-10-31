@@ -66,7 +66,7 @@ def main():
         2: "Trade matrix calculation",
         3: "Animal products to feed calculation",
         4: "Area calculation",
-        5: "Country-level provenance calculation",}
+        5: "Country-level provenance calculations",}
 
     print(f"""\nStarting MRIO calculations with options:
     Working directory: {WORKING_DIR}
@@ -103,7 +103,7 @@ def main():
 
         print(f"\nProcessing year: {year}")
         
-        hist = "Historic" if year < 2012 else ""
+        hist = "Historic" if year < 2010 else ""
 
         if (0 in PIPELINE_COMPONENTS) or (2 in PIPELINE_COMPONENTS):
             calculate_trade_matrix(
@@ -134,12 +134,15 @@ def main():
         if (0 in PIPELINE_COMPONENTS) or (5 in PIPELINE_COMPONENTS):
             print("    Processing country-level provenance and impacts...")
             missing_items = []
-            sua = read_csv(f"./input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
+            if hist == "Historic":
+                sua = read_csv(f"./input_data/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
+            else:
+                sua = read_csv(f"./input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
 
             for country in COUNTRIES:
                 print(f"    Processing country: {country}")
                 t0 = time.perf_counter()
-                cons, feed = consumption_provenance_main(year, country, sua)
+                cons, feed = consumption_provenance_main(year, country, sua, hist)
                 if len(cons) == 0:
                     continue
                 bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv")  

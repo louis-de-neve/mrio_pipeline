@@ -7,6 +7,7 @@ Created on Mon Jul 25 16:55:34 2022
 import pandas as pd
 import numpy as np
 import os
+import time
     
 
 
@@ -58,7 +59,7 @@ def calculate_conversion_factors(conversion_opt, content_factors, item_map_for_c
         return conversion_factors
 
 
-def main(year, country_of_interest, sua):
+def main(year, country_of_interest, sua, historic=""):
 
     
     datPath = "./input_data"
@@ -83,10 +84,33 @@ def main(year, country_of_interest, sua):
     item_codes.columns = [_.strip() for _ in item_codes.columns]
     add_palestine = pd.DataFrame({"ISO3":["PSE"], "FAOSTAT":[299]})
     area_codes = pd.concat([area_codes, add_palestine], ignore_index=True)
+    ic = item_codes.rename(columns={"CPC Code":"Item Code (CPC)", "Item Code":"FAO_code", "Item":"item_name"})
+    ic["Item Code (CPC)"] = ic["Item Code (CPC)"].astype("string")
 
-    
-    fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==5141)]
-    fs = fs[fs.Year == year]
+
+    sua = sua[sua.Year == year]
+    if historic == "":
+        fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==5141)].copy()
+        t0 = time.perf_counter()
+        fs["Item Code (CPC)"] = fs["Item Code (CPC)"].astype("string")
+        t1 = time.perf_counter()
+        print(f"         Converted Item Code to string in {t1 - t0:.2f} seconds")
+        fs = fs.merge(ic, on="Item Code (CPC)", how="left") 
+        fs = fs.drop(columns=["Note"])
+
+    else:
+        population = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==511)].Value.values[0]
+        fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==645)].copy()
+        fs["Value"] = fs["Value"] * population  # convert kg/capita/yr to tonnes by multiplying by population
+        cb_conversion_map = pd.read_csv("./input_data/CB_code_FAO_code_for_conversion_factors.csv", encoding="Latin-1")
+        fs = fs.merge(
+            cb_conversion_map[["FAO_code", "CB_code"]],
+            left_on="Item Code",
+            right_on="CB_code",
+            how="left")
+        fs["FAO_code"] = fs["FAO_code"].fillna(fs["Item Code"])
+        fs.drop(columns=["CB_code"], inplace=True)
+        fs = fs.merge(ic[["FAO_code", "item_name"]], on="FAO_code", how="left")
 
     if len(fs) == 0:
         print(f"         No food supply data for ({area_codes[area_codes["ISO3"] == country_of_interest]["LIST NAME"].values[0]}) in  {year}")
@@ -99,7 +123,7 @@ def main(year, country_of_interest, sua):
 
 
 
-    fserr = fs.copy()
+    
 
     # ERROR CALCULATION - commented out for now
     # fs = fs[(fs.Year <= year+2) & (fs.Year >= year-2)]
@@ -112,11 +136,12 @@ def main(year, country_of_interest, sua):
     #     fs.loc[fs.Item == item, "Value"] = means[means.Item==item].Value.values[0]
     #     fserr.loc[fserr.Item == item, "Value"] = errs[errs.Item==item].Value.values[0]
 
-    ic = item_codes.rename(columns={"CPC Code":"Item Code (CPC)", "Item Code":"FAO_code", "Item":"item_name"})
-    fs = fs.merge(ic, on="Item Code (CPC)", how="left")
-    fserr = fserr.merge(ic, on="Item Code (CPC)", how="left")
+    
 
     
+
+
+    fserr = fs.copy()
 
     imports_feed = prov_mat_feed[prov_mat_feed.Consumer_Country_Code == coi_code]
     imports_feed = add_cols(imports_feed, area_codes=area_codes, item_codes=item_codes)
@@ -174,7 +199,7 @@ def main(year, country_of_interest, sua):
     primary_consumption = primary_consumption.merge(df_hc_err, on="primary_item_code", how="left")
 
     
-    print("         Calculating human consumed provenance")
+    # print("         Calculating human consumed provenance")
     cons_prov = (human_consumed_import_ratios
         .merge(primary_consumption, left_on="Item_Code", right_on="primary_item_code", how="left")
         .drop(columns=["primary_item_code", "item_name"]))
@@ -188,7 +213,7 @@ def main(year, country_of_interest, sua):
 
     # provenance of feed
     ##################################################
-    print("         Calculating feed provenance")
+    # print("         Calculating feed provenance")
 
 
     primary_consumption_anim = primary_consumption[primary_consumption.primary_item_code.isin(weighing_factors.Item_Code)]   
