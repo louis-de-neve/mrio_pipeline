@@ -44,7 +44,7 @@ PREFER_IMPORT = "import"
 WORKING_DIR = '/home/louis/Documents/zoology/pipeline/mrio'
 
 # 0 = all, 1 = unzip, 2 = trade matrix, 3 = animal products to feed, 4 = area calculation, 5 = country impacts
-PIPELINE_COMPONENTS:list = [0]
+PIPELINE_COMPONENTS:list = [5]
 
 
 
