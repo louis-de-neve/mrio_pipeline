@@ -44,14 +44,14 @@ PREFER_IMPORT = "import"
 WORKING_DIR = '/home/louis/Documents/zoology/pipeline/mrio'
 
 # 0 = all, 1 = unzip, 2 = trade matrix, 3 = animal products to feed, 4 = area calculation, 5 = country impacts
-PIPELINE_COMPONENTS:list = [5]
+PIPELINE_COMPONENTS:list = [0]
 
 
 
 from pandas import read_excel, read_csv
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
 COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
-COUNTRIES = ["GBR", "USA", "IND", "BRA", "JPN", "UGA"]
+COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
 
 ##########################################################
 

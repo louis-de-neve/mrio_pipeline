@@ -144,7 +144,7 @@ def main(year, coi_iso, bh, bf):
     kdf = pd.concat([df_uk,df_os])
     kdf = kdf.groupby([kdf.index, "Group"]).sum().reset_index()
 
-
+    # print(df_uk, df_os)
 
 
     df_uk.to_csv(f"{scenPath}/df_{coi_iso.lower()}.csv")

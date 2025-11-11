@@ -94,7 +94,7 @@ def main(year, country_of_interest, sua, historic=""):
         t0 = time.perf_counter()
         fs["Item Code (CPC)"] = fs["Item Code (CPC)"].astype("string")
         t1 = time.perf_counter()
-        print(f"         Converted Item Code to string in {t1 - t0:.2f} seconds")
+        # print(f"         Converted Item Code to string in {t1 - t0:.2f} seconds")
         fs = fs.merge(ic, on="Item Code (CPC)", how="left") 
         fs = fs.drop(columns=["Note"])
 
