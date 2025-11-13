@@ -51,8 +51,8 @@ def main(year, coi_iso, bh, bf):
 
     xdfs_uk = xdf[xdf.Producer_Country_Code == coi]
     xdfs_os = xdf[~(xdf.Producer_Country_Code == coi)]
-    xdfs_uk = xdfs_uk[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code"]]
-    xdfs_os = xdfs_os[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code"]]
+    xdfs_uk = xdfs_uk[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code", "provenance"]]
+    xdfs_os = xdfs_os[["Pasture_m2", "Arable_m2", "SWWU_avg_calc", "ItemT_Name", "ItemT_Code", "provenance"]]
     
     
     xdfs_uk = xdfs_uk.groupby("ItemT_Name").sum()
@@ -66,6 +66,7 @@ def main(year, coi_iso, bh, bf):
         try:
             item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
             df_uk.loc[item, "Group"] = cropdb[cropdb.Item_Code == item_code][grouping].values[0]
+            df_uk.loc[item, "tonnage"] = x.provenance
             df_uk.loc[item, "Pasture_m2"] = x.Pasture_m2
             df_uk.loc[item, "Arable_m2"] = x.Arable_m2
             df_uk.loc[item, "Scarcity_weighted_water_l"] = x.SWWU_avg_calc.sum()
@@ -107,6 +108,7 @@ def main(year, coi_iso, bh, bf):
         try:
             item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
             df_os.loc[item, "Group"] = cropdb[cropdb.Item_Code == item_code][grouping].values[0]
+            df_os.loc[item, "tonnage"] = x.provenance
             df_os.loc[item, "Pasture_m2"] = x.Pasture_m2
             df_os.loc[item, "Arable_m2"] = x.Arable_m2
             df_os.loc[item, "Scarcity_weighted_water_l"] = x.SWWU_avg_calc.sum()
@@ -156,12 +158,30 @@ def main(year, coi_iso, bh, bf):
         kdf.columns = [_ if _ != "level_0" else "Item" for _ in kdf.columns]
     
     kdf.to_csv(f"{scenPath}/kdf.csv")
+
+    food_commodity_impacts = kdf[["Item", "tonnage", "ghg_total", "bd_opp_total", "Scarcity_weighted_water_l"]].copy()
+    food_commodity_impacts["kgCO2_per_kg"] = food_commodity_impacts.ghg_total / (food_commodity_impacts.tonnage * 1000)
+    food_commodity_impacts["exp_extinctions_per_kg"] = food_commodity_impacts.bd_opp_total / (food_commodity_impacts.tonnage * 1000)
+    food_commodity_impacts["scarcity_weighted_water_use_litres_per_kg"] = food_commodity_impacts.Scarcity_weighted_water_l / (food_commodity_impacts.tonnage * 1000)
+
+    food_commodity_impacts = food_commodity_impacts.drop(columns=["ghg_total", "bd_opp_total", "Scarcity_weighted_water_l"])
+    last_row = food_commodity_impacts.iloc[-1].copy()
+    last_row.iloc[1:] = 0
+    last_row.iloc[0] = "Zero"
+    food_commodity_impacts = pd.concat([food_commodity_impacts, last_row.to_frame().T], ignore_index=True)
+
+    old_to_new = pd.read_csv(f"{datPath}/composition_old_vs_new.csv")
+    old_to_new = old_to_new.merge(food_commodity_impacts, left_on="New", right_on="Item", how="left")
+    old_to_new.drop(columns=["Item", "New", "tonnage"], inplace=True)
+    old_to_new.rename(columns={"Old":""}, inplace=True)
+    old_to_new.to_csv(f"{scenPath}/food_commodity_impacts.csv", index=False)
+
     return missing_items
 
     
 if __name__ == "__main__":
     
-    #%%
+
     datPath = "dat"
     # scenPath = os.path.join(odPath, "Work\\Work for others\\Catherine CLR\\food_results\\gbr")
 

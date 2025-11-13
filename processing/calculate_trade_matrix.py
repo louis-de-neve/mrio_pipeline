@@ -398,7 +398,7 @@ def calculate_trade_matrix(
     sugar_data.loc[mask_diagonal, "Value"] = sugar_data.loc[mask_diagonal, "Value_new"]
 
     sugar_data = sugar_data[["Consumer_Country_Code", "Producer_Country_Code", "Value", "Item_Code", "Year"]]
-
+    print(sugar_data)
     output_data = pd.concat([transformed_data[transformed_data["Item_Code"] != 2545], sugar_data], ignore_index=True)
 
     print("    Saving MRIO results...")

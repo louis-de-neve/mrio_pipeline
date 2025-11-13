@@ -88,9 +88,25 @@ def main(year, country_of_interest, sua, historic=""):
     ic["Item Code (CPC)"] = ic["Item Code (CPC)"].astype("string")
 
 
-    sua = sua[sua.Year == year]
+    sua = sua[(sua["Area Code"]==coi_code)&(sua.Year == year)]
+    sugar_df = pd.DataFrame(sua.columns)
+    sugar_cane = sua[(sua["Item Code"]==156)]
+    sugar_beet = sua[(sua["Item Code"]==157)]
+    for sugar in [sugar_cane, sugar_beet]:
+        sugar_p = sugar[sugar["Element"]=="Production"].Value.sum()
+        sugar_i = sugar[sugar["Element"]=="Import quantity"].Value.sum()
+        sugar_e = sugar[sugar["Element"]=="Export quantity"].Value.sum()
+        sugar_l = sugar[sugar["Element"]=="Loss"].Value.sum()
+        sugar_val = np.max([sugar_p + sugar_i - sugar_e - sugar_l, 0])
+        new_entry = sugar.iloc[0].copy()
+        new_entry['Element Code'] = 5141
+        new_entry['Element'] = "Food supply quantity"
+        new_entry['Value'] = sugar_val
+        sua = pd.concat([sua, new_entry.to_frame().T], ignore_index=True)
+    # print(sua[sua["Item Code"].isin([156,157])])
+    
     if historic == "":
-        fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==5141)].copy()
+        fs = sua[sua["Element Code"]==5141].copy()
         t0 = time.perf_counter()
         fs["Item Code (CPC)"] = fs["Item Code (CPC)"].astype("string")
         t1 = time.perf_counter()
@@ -99,8 +115,8 @@ def main(year, country_of_interest, sua, historic=""):
         fs = fs.drop(columns=["Note"])
 
     else:
-        population = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==511)].Value.values[0]
-        fs = sua[(sua["Area Code"]==coi_code)&(sua["Element Code"]==645)].copy()
+        population = sua[(sua["Element Code"]==511)].Value.values[0]
+        fs = sua[sua["Element Code"]==645].copy()
         fs["Value"] = fs["Value"] * population  # convert kg/capita/yr to tonnes by multiplying by population
         cb_conversion_map = pd.read_csv("./input_data/CB_code_FAO_code_for_conversion_factors.csv", encoding="Latin-1")
         fs = fs.merge(

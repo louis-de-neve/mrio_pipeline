@@ -88,7 +88,7 @@ FAO_code,FAO_name,primary_item,FAO_name_primary
 2804,Rice (Paddy Equivalent),27,"Rice, paddy"
 27,"Rice, paddy",27,"Rice, paddy"
 28,"Rice, husked",27,"Rice, paddy"
-30,Rice – total  (Rice milled equivalent),27,"Rice, paddy"
+30,Rice ï¿½ total  (Rice milled equivalent),27,"Rice, paddy"
 31,"Rice, milled",27,"Rice, paddy"
 32,"Rice, broken",27,"Rice, paddy"
 36,"Oil, rice bran",27,"Rice, paddy"
@@ -524,8 +524,8 @@ FAO_code,FAO_name,primary_item,FAO_name_primary
 2543,"Sweeteners, Other",2545,Sugar agregate
 2544,Molasses,2545,Sugar agregate
 2827,"Sugar, Raw Equivalent",2545,Sugar agregate
-156,Sugar cane,2545,Sugar agregate
-157,Sugar beet,2545,Sugar agregate
+156,Sugar cane,156,Sugar cane
+157,Sugar beet,157,Sugar beet
 162,Sugar Raw Centrifugal,2545,Sugar agregate
 163,Sugar non-centrifugal,2545,Sugar agregate
 164,Sugar refined,2545,Sugar agregate
