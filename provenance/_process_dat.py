@@ -143,7 +143,13 @@ def main(year, coi_iso, bh, bf):
             item_code = lookup[lookup.ItemT_Name == item].ItemT_Code.values[0]
             missing_items.append((item, item_code))
             
+
+
+
     kdf = pd.concat([df_uk,df_os])
+    # print(kdf.index.tolist())
+    # print(kdf.loc["Oil palm fruit"])
+
     kdf = kdf.groupby([kdf.index, "Group"]).sum().reset_index()
 
     # print(df_uk, df_os)

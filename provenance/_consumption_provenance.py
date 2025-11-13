@@ -89,10 +89,10 @@ def main(year, country_of_interest, sua, historic=""):
 
 
     sua = sua[(sua["Area Code"]==coi_code)&(sua.Year == year)]
-    sugar_df = pd.DataFrame(sua.columns)
     sugar_cane = sua[(sua["Item Code"]==156)]
     sugar_beet = sua[(sua["Item Code"]==157)]
-    for sugar in [sugar_cane, sugar_beet]:
+    palm_oil = sua[(sua["Item Code"]==257)]
+    for sugar in [sugar_cane, sugar_beet, palm_oil]:
         sugar_p = sugar[sugar["Element"]=="Production"].Value.sum()
         sugar_i = sugar[sugar["Element"]=="Import quantity"].Value.sum()
         sugar_e = sugar[sugar["Element"]=="Export quantity"].Value.sum()
@@ -100,7 +100,7 @@ def main(year, country_of_interest, sua, historic=""):
         sugar_val = np.max([sugar_p + sugar_i - sugar_e - sugar_l, 0])
         new_entry = sugar.iloc[0].copy()
         new_entry['Element Code'] = 5141
-        new_entry['Element'] = "Food supply quantity"
+        new_entry['Element'] = "Food supply quantity (tonnes)"
         new_entry['Value'] = sugar_val
         sua = pd.concat([sua, new_entry.to_frame().T], ignore_index=True)
     # print(sua[sua["Item Code"].isin([156,157])])
