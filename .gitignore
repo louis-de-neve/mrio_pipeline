@@ -1,10 +1,12 @@
 .vscode/*
 .R(deprecated)/*
 processing/__pycache__/*
+processing/cotton_trade_matrix.py
 provenance/__pycache__/*
 __pycache__/*
 results/*
 temp.txt
+temp.py
 input_data/deprecated/*
 input_data/FoodBalanceSheets_E_All_Data_(Normalized).csv
 input_data/FoodBalanceSheetsHistoric_E_All_Data_(Normalized).csv

@@ -183,6 +183,9 @@ def calculate_trade_matrix(
 
     # Tweaks for slightly different files
     production_all = production[["Area_Code", "Area", "Item_Code", "Item", "Element_Code", "Element", "Year_Code", "Year", "Unit", "Value"]]
+
+    item_map[item_map["FAO_code"]==156] = [156, "Sugar cane", 2545, "Sugar agregate"]
+    item_map[item_map["FAO_code"]==157] = [157, "Sugar beet", 2545, "Sugar agregate"]
     # production_crops.drop(columns=["Note"], inplace=True)
     # production_offals = sugar_processing[(sugar_processing["Element_Code"] == 5511) & (sugar_processing["Item_Code"] == 2736)]
     # production_offals['Element_Code'] = 5510
