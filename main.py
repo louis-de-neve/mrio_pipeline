@@ -36,10 +36,9 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "./results"
-YEARS = list(range(2010, 2022))
+RESULTS_DIR = "/maps/tsb42/leakage_v1/mrio_pipeline_results_260522"
+YEARS = list(range(1986, 2022))
 ERROR_ITERATIONS = 1000
-
 
 # Select a conversion method
 CONVERSION_OPTION = "dry_matter"
@@ -50,10 +49,10 @@ PREFER_IMPORT = "import"
 # select working directory
 WORKING_DIR = '.'
 
-USE_2020_DATA = True
+USE_2020_DATA = False
 
 # Multiprocessing settings
-N_PROCESSES = 8
+N_PROCESSES = 32
 
 # Pipeline components to run
 # 0 = all, 1 = unzip, error matrix, 3 = trade matrix, 4 = animal products to feed, 5 = country impacts
