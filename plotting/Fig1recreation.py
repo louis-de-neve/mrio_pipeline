@@ -3,13 +3,16 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+from pathlib import Path
 
-results_dir = "../results"
+results_dir = "../mrio_pipeline_results_260522"
 year=2021
 
 df = pd.DataFrame()
-commodity_crosswalk = pd.read_csv("../input_data/commodity_crosswalk.csv")
-item_codes = pd.read_csv("../input_data/SUA_Crops_Livestock_E_ItemCodes.csv")[[" Item Code", " Item"]].rename(columns={" Item Code": "Item_Code", " Item": "Item"})
+
+input_data_dir = Path("input_data")
+commodity_crosswalk = pd.read_csv(input_data_dir / "commodity_crosswalk.csv")
+item_codes = pd.read_csv(input_data_dir / "SUA_Crops_Livestock_E_ItemCodes.csv")[[" Item Code", " Item"]].rename(columns={" Item Code": "Item_Code", " Item": "Item"})
 
 
 colourdict =  {
@@ -131,7 +134,7 @@ df["Impact_per_kg"] = df["bd_opp_cost_calc"] / (df["TotalProduction"]*1000)
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    area_codes = pd.read_excel(f"../input_data/nocsDataExport_20251021-164754.xlsx", engine="openpyxl")  
+    area_codes = pd.read_excel(input_data_dir / "nocsDataExport_20251021-164754.xlsx", engine="openpyxl")  
     area_codes = area_codes[["ISO3", "FAOSTAT"]].rename(columns={"ISO3":"Country", "FAOSTAT":"Effective_Producer_Code"})
 df = df.merge(area_codes, on="Effective_Producer_Code", how="left")
 
@@ -176,6 +179,8 @@ ax.set_xlim(-0.6, len(group_df)-0.4)
 ax.set_ylim(1e-13, 1e-7)
 ax.set_yscale("log")
 ax.set_ylabel("Extinction opportunity cost distribution \n ($\Delta$E per kilogram)")
+
+Path("../outputs").mkdir(exist_ok=True)
 plt.savefig(f"../outputs/Fig1_recreation_{year}.png", dpi=600, bbox_inches='tight')
 
     

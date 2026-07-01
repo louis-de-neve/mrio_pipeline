@@ -4,6 +4,12 @@ import seaborn as sns
 import seaborn.objects as so
 import os
 
+res_dir = "../mrio_pipeline_results_260522"
+base_dir = "."
+
+# countries = [a[-7:-4] for a in os.listdir(f"{res_dir}/impacts/2021")]
+countries = ["GBR"]
+
 color_dict = {'Grains, roots, starchy carbohydrates' : "#E69F00",
                 'Legumes, beans, nuts' : "#F0E442",
                 'Fruit and vegetables' : "#009E73",
@@ -28,29 +34,27 @@ order = pd.DataFrame({'Grains, roots, starchy carbohydrates' : 3,
 import warnings
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
-    area_codes = pd.read_excel(f"../input_data/nocsDataExport_20251021-164754.xlsx", engine="openpyxl")  
+    area_codes = pd.read_excel(f"{base_dir}/input_data/nocsDataExport_20251021-164754.xlsx", engine="openpyxl")  
     area_codes = area_codes[["ISO3", "FAOSTAT", "LIST NAME"]].rename(columns={"ISO3":"Country", "FAOSTAT":"FAO_Code"})
 
-pop_data = pd.read_csv("../input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
+pop_data = pd.read_csv(f"{base_dir}/input_data/SUA_Crops_Livestock_E_All_Data_(Normalized).csv", encoding="latin-1", low_memory=False)
 pop_data = pop_data[pop_data["Element Code"] == 511][["Area Code", "Year", "Value"]]
 pop_data["Value"] *= 1000  # convert to individuals
 
-
-countries = [a[-7:-4] for a in os.listdir("../results/impacts/2010")]
 def shuffle(lst):
     import random
     # random.seed(44)
     random.shuffle(lst)
     return lst
 countries = shuffle(countries)
-results_dir = "../results/"
+results_dir = res_dir
 
 for country in countries:
     master_df = pd.DataFrame()
     for year in os.listdir(results_dir):
         if year == "impacts":
             continue
-        df = pd.read_csv(f"{results_dir}impacts/{year}/impacts_aggregated_{country}.csv", index_col=0)
+        df = pd.read_csv(f"{results_dir}/impacts/{year}/impacts_aggregated_{country}.csv", index_col=0)
         df = df[["Group", "bd_opp_total", "bd_opp_total_err"]]
         df = df.groupby(["Group"]).sum().reset_index()
         df["Year"] = int(year)
@@ -75,9 +79,6 @@ for country in countries:
         master_df = master_df.merge(totals[["Country", "Year", "Total"]], on=["Country", "Year"])
         master_df["bd_opp_total"] /= master_df["Total"] / 100
         master_df_imports = master_df.drop(columns=["Total"])
-
-
-
 
 
     country_df = master_df
