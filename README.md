@@ -1,16 +1,45 @@
-# MRIO Agricultural Trade Analysis Pipeline - Python Version
+<p align="center">
+  <img src="input_data/NatFood_cover_final_TSB_2507032.png" alt=https://spinach-flower-g4yx.squarespace.com/ />
+  
+</p>
 
-This is a Python conversion of the R-based Multi-Regional Input-Output (MRIO) pipeline for analyzing agricultural trade and its impact on cropland use and species habitats.
+<p align="center">
+<a href="https://github.com/louis-de-neve/mrio_pipeline/releases">
+    <img alt="GitHub tag (latest SemVer pre-release)" src="https://img.shields.io/github/v/tag/louis-de-neve/mrio_pipeline?include_prereleases&label=latest%20version&logo=github&sort=semver&color=green">
+  </a>
+<a href="https://python.org">
+    <img alt="lang" src="https://img.shields.io/badge/langauge-Python-3776AB">
+</a>
+<a href="https://python.org">
+    <img alt="lang" src="https://img.shields.io/badge/version-3.13.5-3776AB?logo=python&logoColor=f5f5f5">
+</a>
+<a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">
+    <img alt="MIT license" src="https://img.shields.io/badge/License-CC BY--NC--SA-orange?logo=CreativeCommons&logoColor=f5f5f5">
+</a>
+<a href="https://link.springer.com/article/10.1007/s11625-022-01138-7">
+    <img alt="Nature" src="https://img.shields.io/badge/cite-Sustainability Science-darkgreen">
+</a>
+<a href="https://www.nature.com/articles/s43016-025-01224-w">
+    <img alt="Nature" src="https://img.shields.io/badge/cite-Nature Food-green">
+</a>
+
+</p>
+<!-- Title -->
+<h1 align="center">
+  FoodLIFE MRIO Pipeline - FLMP</h1>
+<p align="center">
+This is a Python conversion of an R-based Multi-Regional Input-Output (<a href="https://zenodo.org/records/5751294">MRIO</a>) model merged with <a href="https://github.com/thomasball42/Quantifying-the-impact-of-food-we-eat-on-species-extinctions">FoodLife</a> for the purpose of analyzing agricultural trade and its impact on cropland use and species habitats.
+</p>
 
 
->[!IMPORTANT]Code Origins
->This code is built upon code from the following publications:
+> [!IMPORTANT]
+> This code is built upon code from the following publications:
 >
->**Schwarzmueller, F. & Kastner, T (2022), Agricultural trade and its impact on cropland use and the global loss of species' habitats. Sustainability Science, doi: [10.1007/s11625-022-01138-7](https://link.springer.com/article/10.1007/s11625-022-01138-7)**
+> **Schwarzmueller, F. & Kastner, T (2022), Agricultural trade and its impact on cropland use and the global loss of species' habitats. Sustainability Science, doi: [10.1007/s11625-022-01138-7](https://link.springer.com/article/10.1007/s11625-022-01138-7)**
 >
->**Ball, T.S., Dales, M., Eyres, A. et al. Food impacts on species extinction risks can vary by three orders of magnitude. Nat Food 6, 848–856 (2025). doi: [10.1038/s43016-025-01224-w](https://www.nature.com/articles/s43016-025-01224-w)**
+> **Ball, T.S., Dales, M., Eyres, A. et al. Food impacts on species extinction risks can vary by three orders of magnitude. Nat Food 6, 848–856 (2025). doi: [10.1038/s43016-025-01224-w](https://www.nature.com/articles/s43016-025-01224-w)**
 >
->Please cite appropriately when using this code.
+> Please cite appropriately when using this code.
 
 ## Files Overview
 
@@ -102,6 +131,12 @@ Choose whether to prefer import or export data:
 prefer_import = "import"  # or "export"
 ```
 
+#### Use 2020 Data
+Choose whether to use 2020 mapspam data:
+```python
+USE_2020_DATA = True
+```
+
 ### Pipeline Components
 Control which parts of the pipeline to run:
 ```python
@@ -111,9 +146,10 @@ PIPELINE_COMPONENTS:list = [0]
 Component options:
 - `0` = Full pipeline (all components)
 - `1` = Unzipping data only
-- `2` = Trade matrix calculation
-- `3` = Animal products to feed calculation
-- `4` = Country-level impact calculations (as in [LIFE](https://github.com/thomasball42/food_LIFE))
+- `2` = Error matrix calculation
+- `3` = Trade matrix calculation
+- `4` = Animal products to feed calculation
+- `5` = Country-level impact calculations (as in [LIFE](https://github.com/thomasball42/food_LIFE))
 
 ### Countries
 Which countries to analyse in detail:
@@ -166,10 +202,10 @@ For each processed year, the pipeline generates:
    - `food_commodity_impacts.csv` has been added with calculated per kg impacts
 
 ---
->[!NOTE]Performance
->Processing time: ~20 minutes for all years (1986-2013) on a machine with 32GB RAM
->Recommended minimum 32GB RAM
+> [!NOTE]
+> Processing time: ~2 hrs for all years (1986-2013) on a machine with 32GB RAM
+> Recommended minimum 32GB RAM
 
 ---
->[!NOTE]Reliability
+> [!CAUTION]
 > In theory this code should run cleanly for 1986 - 2022, however commodity crosswalks are missing for the 2000 MAPSPAM commodities and FAO data mapping is unreliable prior to 2010. We therefore cannot guarantee the accuracy of results prior to 2010. 
