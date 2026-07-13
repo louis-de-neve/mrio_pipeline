@@ -36,7 +36,7 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "./results"
+RESULTS_DIR = "../mrio_pipeline_results_260713"
 ERROR_ITERATIONS = 1000
 YEARS = list(range(2010, 2022))
 
@@ -49,7 +49,7 @@ PREFER_IMPORT = "import"
 # select working directory
 WORKING_DIR = '.'
 
-USE_2020_DATA = False
+USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA issues fixed though it seems some issues persist.
 
 # Multiprocessing settings
 N_PROCESSES = 32
@@ -60,14 +60,42 @@ PIPELINE_COMPONENTS: list = [0]
 
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
 COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
-COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
+# COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
 
+
+
+def _process_year_matrices(year: int, hist: str, conversion_option: str, prefer_import: str, results_dir: Path, error_data):
+    """
+    Runs the per-year, all-countries-at-once steps (trade matrix + animal-to-feed
+    conversion + biodiversity value fetch). Independent across years, so callers
+    can run this over a pool spanning all years.
+    """
+    try:
+        print(f"    [PID {os.getpid()}] Computing trade matrix for year {year}")
+        t0 = time.perf_counter()
+        calculate_trade_matrix(
+            conversion_opt=conversion_option,
+            prefer_import=prefer_import,
+            year=year,
+            historic=hist,
+            results_dir=results_dir,
+            all_error_data=error_data)
+        animal_products_to_feed(
+            prefer_import=prefer_import,
+            conversion_opt=conversion_option,
+            year=year,
+            historic=hist,
+            results_dir=results_dir)
+        fetch_biodiversity_vals_path(year, "./input_data")
+        t1 = time.perf_counter()
+        print(f"    [PID {os.getpid()}] Completed matrices for year {year} in {t1 - t0:.2f} seconds")
+        return (year, None)
+    except Exception as e:
+        print(f"    [PID {os.getpid()}] Error computing matrices for year {year}: {e}")
+        return (year, str(e))
 
 
 def _process_country(country: str, year: int, hist: str):
-    """
-    Uses the globally-initialized _SUA and _HIST values.
-    """
     missing_items_local = []
     try:
         print(f"    [PID {os.getpid()}] Processing country: {country}")
@@ -77,8 +105,8 @@ def _process_country(country: str, year: int, hist: str):
         if len(cons) == 0:
             print(f"    [PID {os.getpid()}] No consumption data for {country} in {year}")
             return []  # nothing to do for this country
-        bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv", results_dir=Path(RESULTS_DIR))
-        bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv", results_dir=Path(RESULTS_DIR))
+        bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv", results_dir=Path(RESULTS_DIR), use_2020=USE_2020_DATA)
+        bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv", results_dir=Path(RESULTS_DIR), use_2020=USE_2020_DATA)
         if country == "WORLD":
             mi = process_dat_main_global(year, "WORLD", bh, bf, results_dir=Path(RESULTS_DIR))
         else:
@@ -138,7 +166,6 @@ def main(years=list(range(1986, 2022)),
         except Exception as e:
             print(f"Error during data unzipping: {e}")
 
-
     if pipeline_components == [1]:
         return
     
@@ -157,92 +184,58 @@ def main(years=list(range(1986, 2022)),
         except Exception:
             n_processes = 1
 
+    # Phase 0: directory setup + per-year historic flag, cheap and sequential
+    year_hist = {}
     for year in years:
-
-        # year_dir = Path(f"./results/{year}")
         year_dir = results_dir / str(year)
         year_dir.mkdir(exist_ok=True)
-        # mrio_dir = Path(f"./results/{year}/.mrio")
         mrio_dir = results_dir / str(year) / ".mrio"
         mrio_dir.mkdir(exist_ok=True)
         for country in countries:
             country_dir = results_dir / str(year) / country
             country_dir.mkdir(exist_ok=True)
+        year_hist[year] = "Historic" if year < 2010 else ""
 
-        print(f"\nProcessing year: {year}")
+    # Phase 1: trade matrix + animal-to-feed conversion, parallel across years
+    if (0 in pipeline_components) or (3 in pipeline_components) or (4 in pipeline_components):
+        processes = min(n_processes, len(years))
+        print(f"\nComputing trade matrices for {len(years)} years using up to {processes} worker processes")
+        args_iterable = [(y, year_hist[y], conversion_option, prefer_import, results_dir, error_data) for y in years]
+        if processes == 1:
+            results = [_process_year_matrices(*args) for args in args_iterable]
+        else:
+            with multiprocessing.Pool(processes=processes) as pool:
+                results = pool.starmap(_process_year_matrices, args_iterable)
+        for y, err in results:
+            if err:
+                print(f"Error computing matrices for year {y}: {err}")
 
-        hist = "Historic" if year < 2010 else ""
+    # Phase 2: country-level provenance and impacts, parallel across (year, country)
+    if (0 in pipeline_components) or (5 in pipeline_components):
+        print("\nProcessing country-level provenance and impacts...")
+        tasks = [(country, year, year_hist[year]) for year in years for country in countries]
 
-        if (0 in pipeline_components) or (3 in pipeline_components):
-            calculate_trade_matrix(
-                conversion_opt=conversion_option,
-                prefer_import=prefer_import,
-                year=year,
-                historic=hist,
-                results_dir=results_dir,
-                all_error_data=error_data)
+        if n_processes == 1:
+            results = [_process_country(*task) for task in tasks]
+        else:
+            processes = min(n_processes, len(tasks))
+            print(f"    Spawning {processes} worker processes for {len(tasks)} (year, country) tasks")
+            with multiprocessing.Pool(processes=processes) as pool:
+                results = pool.starmap(_process_country, tasks)
 
-        if (0 in pipeline_components) or (4 in pipeline_components):
-            animal_products_to_feed(
-                prefer_import=prefer_import,
-                conversion_opt=conversion_option,
-                year=year,
-                historic=hist,
-                results_dir=results_dir)
+        missing_by_year = {year: [] for year in years}
+        for (country, year, hist), res in zip(tasks, results):
+            if res:
+                missing_by_year[year].extend(res)
 
-        if (0 in pipeline_components) or (5 in pipeline_components):
-            print("    Processing country-level provenance and impacts...")
-            missing_items = []
-            fetch_biodiversity_vals_path(year, "./input_data")
-
-            if len(countries) <= 1 or n_processes == 1:
-
-                for country in countries:
-                    try:
-                        print(f"    Processing country: {country}")
-                        t0 = time.perf_counter()
-                        cons, feed = consumption_provenance_main(year, country, hist, results_dir=results_dir)
-                        if len(cons) == 0:
-                            continue
-                        bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA)
-                        bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA)
-                        if country == "WORLD":
-                            mi = process_dat_main_global(year, "WORLD", bh, bf, results_dir=Path(RESULTS_DIR))
-                        else:
-                            mi = process_dat_main(year, country, bh, bf, results_dir=results_dir)
-                        missing_items.extend(mi)
-                        t1 = time.perf_counter()
-                        print(f"         Completed in {t1 - t0:.2f} seconds")
-                    except Exception as e:
-                        print(e)
-                        print(f"Error processing {country}: {e}")
-
-            else:
-                # Use a Pool of worker processes. Initialize each worker to load the SUA file once.
-                processes = min(n_processes, len(countries))
-                print(f"    Spawning {processes} worker processes for {len(countries)} countries")
-                pool = multiprocessing.Pool(processes=processes)
-                try:
-                    args_iterable = [(c, year, hist) for c in countries]
-
-                    results = pool.starmap(_process_country, args_iterable)
-
-                    for res in results:
-                        if res:
-                            missing_items.extend(res)
-                finally:
-                    pool.close()
-                    pool.join()
-
+        for year in years:
             missing_items_file = results_dir / str(year) / "missing_items.txt"
-
             with open(missing_items_file, "w") as f:
                 f.write("Items missing from crosswalk and their codes:\n")
-
-                for item, code in set(missing_items):
+                for item, code in set(missing_by_year[year]):
                     f.write(f" - {item}: {code}\n")
 
-        print(f"Year {year} processing completed successfully\n")
+    print("\nAll years processed successfully\n")
 
 if __name__ == "__main__":
 
