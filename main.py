@@ -52,8 +52,8 @@ N_PROCESSES = 16
 OVERWRITE = False
 
 # Defaults to all countries if this is None, otherwise specific a list of your favourite country iso3 codes e.g. ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
-# CHOOSE_COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
-CHOOSE_COUNTRIES = None
+# COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
+COUNTRIES = None
 
 # Pipeline components to run
 # 0 = all, 1 = unzip, 2 = error matrix, 3 = trade matrix, 4 = animal products to feed, 5 = country impacts
@@ -76,7 +76,7 @@ USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA is
 # fixed though it seems some issues persist.
 
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
-COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)] if not CHOOSE_COUNTRIES else CHOOSE_COUNTRIES
+COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)] if COUNTRIES is None else COUNTRIES
 
 def _process_year_matrices(year: int, hist: str, conversion_option: str, prefer_import: str, results_dir: Path,
                             error_data, overwrite=True, status=None, completed=None, lock=None):
