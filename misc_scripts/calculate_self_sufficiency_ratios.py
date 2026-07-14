@@ -1,10 +1,17 @@
 from pathlib import Path
 import pandas as pd
+from tqdm import tqdm
 
-results_dir = Path("/maps/tsb42/leakage_v1/mrio_pipeline_results_260409")
+RESULTS_DIR = Path("/maps/tsb42/leakage_v1/mrio_pipeline_results_260713")
 
-countries = ["USA", "NLD", "GBR", "DEU", "FRA", "TZA"]
-years = None
+cdat = pd.read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
+countries = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
+
+# COUNTRIES = ["USA", "NLD", "GBR", "DEU", "FRA", "TZA"]
+COUNTRIES = countries
+
+YEARS = None
+QUIET = True
 
 def calculate_self_sufficiency_ratios(results_dir: Path, countries=None, years=None) -> pd.DataFrame:
 
@@ -15,48 +22,51 @@ def calculate_self_sufficiency_ratios(results_dir: Path, countries=None, years=N
     if years is not None:
         year_dirs = [d for d in year_dirs if d.name in years]
 
+    year_c_dirs = []
     for year_dir in year_dirs:
-        c_dirs= list(year_dir.glob("*"))
+        c_dirs = list(year_dir.glob("*"))
         c_dirs = [f for f in c_dirs if f.is_dir() and f.name != ".mrio"] #and f.name != "impacts"]
         if countries is not None:
             c_dirs = [f for f in c_dirs if f.name in countries]
+        year_c_dirs.extend((year_dir, c_dir) for c_dir in c_dirs)
 
-        for c_dir in c_dirs:
-            c = c_dir.name
-            year = year_dir.name
-            print(f"Processing {c} in {year}...")
-            
-            try:
-                df_c = pd.read_csv(c_dir / f"df_{c.lower()}.csv")
-                df_imported = pd.read_csv(c_dir / f"df_os.csv")
-                df_full = pd.read_csv(c_dir / f"impacts_full.csv")
+    pbar = tqdm(year_c_dirs)
+    for year_dir, c_dir in pbar:
+        c = c_dir.name
+        year = year_dir.name
+        pbar.set_description(f"Processing {c} in {year}")
 
-                domestic_no_feed = df_c.tonnage.sum()
-                imported_no_feed = df_imported.tonnage.sum()
+        try:
+            df_c = pd.read_csv(c_dir / f"df_{c.lower()}.csv")
+            df_imported = pd.read_csv(c_dir / f"df_os.csv")
+            df_full = pd.read_csv(c_dir / f"impacts_full.csv")
 
-                domestic_full = df_full[df_full.Country_ISO == c.upper()].provenance.sum()
-                imported_full = df_full[df_full.Country_ISO != c.upper()].provenance.sum()
+            domestic_no_feed = df_c.tonnage.sum()
+            imported_no_feed = df_imported.tonnage.sum()
 
-                new_row = pd.DataFrame([{
-                    "country": c,
-                    "year": year,
-                    "domestic_tonnes_no_feed": domestic_no_feed,
-                    "imported_tonnes_no_feed": imported_no_feed,
-                    "ratio_no_feed": domestic_no_feed / (domestic_no_feed + imported_no_feed),
-                    "domestic_tonnes_full": domestic_full,
-                    "imported_tonnes_full": imported_full,
-                    "ratio_full": domestic_full / (domestic_full + imported_full)
-                }])
+            domestic_full = df_full[df_full.Country_ISO == c.upper()].provenance.sum()
+            imported_full = df_full[df_full.Country_ISO != c.upper()].provenance.sum()
 
-                df = pd.concat([df, new_row], ignore_index=True)
+            new_row = pd.DataFrame([{
+                "country": c,
+                "year": year,
+                "domestic_tonnes_no_feed": domestic_no_feed,
+                "imported_tonnes_no_feed": imported_no_feed,
+                "ratio_no_feed": domestic_no_feed / (domestic_no_feed + imported_no_feed),
+                "domestic_tonnes_full": domestic_full,
+                "imported_tonnes_full": imported_full,
+                "ratio_full": domestic_full / (domestic_full + imported_full)
+            }])
 
-            except Exception as e:
+            df = pd.concat([df, new_row], ignore_index=True)
+
+        except Exception as e:
+            if not QUIET:
                 print(f"Error processing {c} in {year}: {e}")
-            
 
     return df
 
 if __name__ == "__main__":
-    df = calculate_self_sufficiency_ratios(results_dir=results_dir, years=years, countries=countries)
-    Path(results_dir / "ssr").mkdir(exist_ok=True)
-    df.to_csv(results_dir / "ssr" /  "self_sufficiency_ratios.csv", index=False)
+    df = calculate_self_sufficiency_ratios(results_dir=RESULTS_DIR, years=YEARS, countries=COUNTRIES)
+    Path(RESULTS_DIR / "ssr").mkdir(exist_ok=True)
+    df.to_csv(RESULTS_DIR / "ssr" /  "self_sufficiency_ratios.csv", index=False)

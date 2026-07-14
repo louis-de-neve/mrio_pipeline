@@ -41,15 +41,30 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "../mrio_pipeline_results_260713"
+RESULTS_DIR = "../mrio_pipeline_results_260713" # set this to any dir of your choosing
 ERROR_ITERATIONS = 1000
 YEARS = list(range(1961, 2022))
 
+# Multiprocessing settings
+N_PROCESSES = 16
+
+# Overwrite stuff?
+OVERWRITE = False
+
+# Defaults to all countries if this is None, otherwise specific a list of your favourite country iso3 codes e.g. ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
+# CHOOSE_COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
+CHOOSE_COUNTRIES = None
+
+# Pipeline components to run
+# 0 = all, 1 = unzip, 2 = error matrix, 3 = trade matrix, 4 = animal products to feed, 5 = country impacts
+PIPELINE_COMPONENTS: list = [0]  # default to all, but can be overridden by command line args
+
+
 # Select a conversion method
-CONVERSION_OPTION = "dry_matter"
+CONVERSION_OPTION = "dry_matter" # you probably shouldn't change this unless you're doing something crazy
 
 # Prefer import or export data
-PREFER_IMPORT = "import" # you probably shouldn't change this unless you're doing something crazy
+PREFER_IMPORT = "import" # you also probably shouldn't change this unless you're doing something crazy
 
 # select working directory
 WORKING_DIR = '.'
@@ -60,20 +75,8 @@ WORKING_DIR = '.'
 USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA issues 
 # fixed though it seems some issues persist.
 
-# Multiprocessing settings
-N_PROCESSES = 16
-
-OVERWRITE = False
-
-# Pipeline components to run
-# 0 = all, 1 = unzip, error matrix, 3 = trade matrix, 4 = animal products to feed, 5 = country impacts
-PIPELINE_COMPONENTS: list = [0]
-
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
-COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]
-# COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
-
-
+COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)] if not CHOOSE_COUNTRIES else CHOOSE_COUNTRIES
 
 def _process_year_matrices(year: int, hist: str, conversion_option: str, prefer_import: str, results_dir: Path,
                             error_data, overwrite=True, status=None, completed=None, lock=None):

@@ -4,6 +4,7 @@ processing/__pycache__/*
 plotting_functionalised/__pycache__/*
 processing/cotton_trade_matrix.py
 provenance/__pycache__/*
+misc_scripts/__pycache__/*
 __pycache__/*
 results/*
 outputs/*

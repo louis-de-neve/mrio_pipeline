@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-ssr_path = Path("../mrio_pipeline_results_260409/ssr/self_sufficiency_ratios.csv")
+ssr_path = Path("../mrio_pipeline_results_260713/ssr/self_sufficiency_ratios.csv")
 
 df = pd.read_csv(ssr_path)
 
@@ -23,7 +23,6 @@ for country in df.country.unique():
     ax.plot(dat.year, dat.ratio_full, label=country,
             linewidth = 4, alpha = 0.8,
             color=color)
-
 
 ax.set_xticks(ax.get_xticks(), labels=ax.get_xticks(), fontsize=fs)
 ax.set_yticks(ax.get_yticks(), labels=[round(_, 2) for _ in ax.get_yticks()], fontsize=fs)
