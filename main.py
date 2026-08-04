@@ -41,7 +41,7 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "../mrio_pipeline_results_260713" # set this to any dir of your choosing
+RESULTS_DIR = "../results/mrio_pipeline_results_260804" # set this to any dir of your choosing
 ERROR_ITERATIONS = 1000
 YEARS = list(range(1961, 2022))
 
@@ -72,8 +72,22 @@ WORKING_DIR = '.'
 # Setting this to False reverts to using the 2010 mapspam data for all years beyond 2010 
 # (because the 2020 data is suspicious, speak to Tom for details. Even better speak to
 # someone who knows what they're talking about)
-USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA issues 
+USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA issues
 # fixed though it seems some issues persist.
+
+# Carbon opportunity cost (COC) is a one-off cost of converting land, but production
+# continues indefinitely; this spreads (amortizes) that fixed cost across an assumed
+# production lifetime to get an annualized per-year impact: annual_impact = COC / AMORTIZATION_YEARS.
+# 30 years is the value used for the "expansion COC" in Wirsenius 2025 (https://www.researchsquare.com/article/rs-6678069/v1)
+AMORTIZATION_YEARS = 30
+
+# Which band of the biodiversity opportunity cost (mapspam_outputs) data to use.
+# Available bands: "all", "AMPHIBIA", "AVES", "MAMMALIA", "REPTILIA". Generally use 'all'. 
+BD_BAND_NAME = "all"
+
+# Which band of the carbon opportunity cost (coc_outputs) data to use.
+# Available bands: "median", "5th_percentile", "95th_percentile".
+COC_BAND_NAME = "median"
 
 cdat = read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
 COUNTRIES = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)] if COUNTRIES is None else COUNTRIES
@@ -138,6 +152,7 @@ def _process_year_matrices(year: int, hist: str, conversion_option: str, prefer_
 
 
 def _process_country(country: str, year: int, hist: str, results_dir: Path, overwrite=True,
+                      amortization_years=30, bd_band_name="all", coc_band_name="median",
                       status=None, completed=None, lock=None):
     """
     Runs consumption/feed provenance + biodiversity impact assignment for a
@@ -173,12 +188,14 @@ def _process_country(country: str, year: int, hist: str, results_dir: Path, over
             else:
                 status[pid] = {"task": f"{desc}: no consumption data", "start": time.perf_counter()}
             return []  # nothing to do for this country
-        bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA)
-        bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA)
+        bf = get_impacts_main(feed, year, country, "feed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA,
+                               bd_band_name=bd_band_name, coc_band_name=coc_band_name)
+        bh = get_impacts_main(cons, year, country, "human_consumed_impacts_wErr.csv", results_dir=results_dir, use_2020=USE_2020_DATA,
+                               bd_band_name=bd_band_name, coc_band_name=coc_band_name)
         if country == "WORLD":
-            mi = process_dat_main_global(year, "WORLD", bh, bf, results_dir=results_dir)
+            mi = process_dat_main_global(year, "WORLD", bh, bf, results_dir=results_dir, amortization_years=amortization_years)
         else:
-            mi = process_dat_main(year, country, bh, bf, results_dir=results_dir)
+            mi = process_dat_main(year, country, bh, bf, results_dir=results_dir, amortization_years=amortization_years)
         missing_items_local.extend(mi)
         t1 = time.perf_counter()
         if status is None:
@@ -253,7 +270,10 @@ def main(years=list(range(1986, 2022)),
          countries=None,
          results_dir="./results",
          n_processes=None,
-         overwrite=True):
+         overwrite=True,
+         amortization_years=30,
+         bd_band_name="all",
+         coc_band_name="median"):
 
     if countries is None:
         countries = COUNTRIES
@@ -339,7 +359,7 @@ def main(years=list(range(1986, 2022)),
     # Phase 2: country-level provenance and impacts, parallel across (year, country)
     if (0 in pipeline_components) or (5 in pipeline_components):
         print("\nProcessing country-level provenance and impacts...")
-        tasks = [(country, year, year_hist[year], results_dir, overwrite) for year in years for country in countries]
+        tasks = [(country, year, year_hist[year], results_dir, overwrite, amortization_years, bd_band_name, coc_band_name) for year in years for country in countries]
 
         if n_processes == 1:
             results = [_process_country(*task) for task in tasks]
@@ -351,7 +371,7 @@ def main(years=list(range(1986, 2022)),
                 label=f"Country/year provenance ({len(tasks)} tasks)")
 
         missing_by_year = {year: [] for year in years}
-        for (country, year, hist, _rd, _ow), res in zip(tasks, results):
+        for (country, year, hist, _rd, _ow, _am, _bd, _coc), res in zip(tasks, results):
             if res:
                 missing_by_year[year].extend(res)
 
@@ -376,4 +396,7 @@ if __name__ == "__main__":
         countries=COUNTRIES,
         n_processes=N_PROCESSES,
         overwrite=OVERWRITE,
+        amortization_years=AMORTIZATION_YEARS,
+        bd_band_name=BD_BAND_NAME,
+        coc_band_name=COC_BAND_NAME,
     )

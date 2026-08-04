@@ -2,7 +2,7 @@ from pathlib import Path
 import pandas as pd
 from tqdm import tqdm
 
-RESULTS_DIR = Path("/maps/tsb42/leakage_v1/mrio_pipeline_results_260713")
+RESULTS_DIR = Path("/maps/tsb42/leakage_v1/results/mrio_pipeline_results_260713")
 
 cdat = pd.read_excel("input_data/nocsDataExport_20251021-164754.xlsx")
 countries = [_.upper() for _ in cdat["ISO3"].unique().tolist() if isinstance(_, str)]

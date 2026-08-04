@@ -13,6 +13,11 @@ import sys
 
 from provenance._get_biodiversity_vals import fetch_biodiversity_vals_path
 
+def fetch_coc_vals_path(year, datPath):
+    coc_years = [2010, 2020]
+    coc_yr = min(coc_years, key=lambda y: abs(y - year))  # ties -> 2010
+    return os.path.join(datPath, "coc_outputs", f"processed_coc_data_{coc_yr}.csv"), coc_yr
+
 def get_wwf_pbd(datPath):
     file_name = "Planet-Based Diets - Data and Viewer.xlsx"
     sheet_name = "DATA - Product Level"
@@ -31,7 +36,8 @@ def get_wwf_pbd(datPath):
 import warnings
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
-def get_impacts(wdf, year, coi, filename, results_dir=Path("./results"), use_2020=True):
+def get_impacts(wdf, year, coi, filename, results_dir=Path("./results"), use_2020=True,
+                 bd_band_name="all", coc_band_name="median"):
     # setup
     country_savefile_path = results_dir / str(year) / coi
     datPath = "./input_data"
@@ -141,7 +147,7 @@ def get_impacts(wdf, year, coi, filename, results_dir=Path("./results"), use_202
 
     bd_opp_cost = pd.read_csv(bd_path)
 
-    bd_opp_cost = bd_opp_cost[bd_opp_cost.band_name=="all"]
+    bd_opp_cost = bd_opp_cost[bd_opp_cost.band_name==bd_band_name]
     bd_opp_cost.deltaE_mean *= -bd_opp_cost.sp_count
     bd_opp_cost.deltaE_mean_sem *= bd_opp_cost.sp_count
     
@@ -204,9 +210,59 @@ def get_impacts(wdf, year, coi, filename, results_dir=Path("./results"), use_202
     wdf["bd_opp_cost_calc"] = wdf["bd_val"] * wdf["bd_opp_cost_m2"]
     wdf["err"] = np.sqrt((wdf.opp_cost_err/wdf.opp_cost_val)**2 + (wdf.bd_err/wdf.bd_val)**2)
     wdf["bd_opp_cost_calc_err"] = wdf["bd_opp_cost_calc"] * wdf["err"]
+    wdf.drop(columns=["err"], inplace=True)
 
-    wdf.drop(columns=["bd_val", "bd_err", "err"], inplace=True)
-    
+    # carbon opportunity cost (COC)
+    coc_path, coc_yr = fetch_coc_vals_path(year, datPath)
+    coc_opp_cost = pd.read_csv(coc_path)
+    coc_opp_cost = coc_opp_cost[coc_opp_cost.band_name==coc_band_name]
+
+    oc_crop_coc = coc_opp_cost[(coc_opp_cost.data_mean > 0)].copy()
+    oc_crop_coc_pixels = oc_crop_coc.pixel_count.sum()
+    oc_crop_coc["weighted_data_mean"] = oc_crop_coc.data_mean * oc_crop_coc.pixel_count
+    oc_crop_coc = np.exp(np.log(oc_crop_coc.weighted_data_mean).mean())/oc_crop_coc_pixels
+
+    oc_crop_coc_err = coc_opp_cost[(coc_opp_cost.data_mean_sem > 0)].copy()
+    oc_crop_coc_err_pixels = oc_crop_coc_err.pixel_count.sum()
+    oc_crop_coc_err["weighted_data_mean_sem"] = oc_crop_coc_err.data_mean_sem * oc_crop_coc_err.pixel_count
+    oc_crop_coc_err = np.exp(np.log(oc_crop_coc_err.weighted_data_mean_sem).mean())/oc_crop_coc_err_pixels
+
+    # reshape coc_opp_cost for merging
+    coc_opp_cost = coc_opp_cost[["ISO3", "item_name", "data_mean", "data_mean_sem"]]
+    coc_opp_cost = coc_opp_cost.rename(columns={"ISO3":"Country_ISO", "item_name":"spam_name", "data_mean":"coc_val", "data_mean_sem": "coc_err"})
+
+    # calculate global averages for fallback 1
+    global_coc_opp_cost = pd.DataFrame()
+    for v in coc_opp_cost.spam_name.dropna().unique():
+        subset = coc_opp_cost[(coc_opp_cost.spam_name == v)&(coc_opp_cost.coc_val>0)]["coc_val"].dropna().values
+        mean = np.exp(np.log(subset).mean())
+        subset2 = coc_opp_cost[(coc_opp_cost.spam_name == v)&(coc_opp_cost.coc_val>0)]["coc_err"].dropna().values
+        err = np.exp(np.log(subset2).mean())
+        global_coc_opp_cost.loc[v, "coc_val_fallback"] = mean
+        global_coc_opp_cost.loc[v, "coc_err_fallback"] = err
+
+    # merge in coc data
+    wdf = wdf.merge(coc_opp_cost, how="left", on=["Country_ISO", "spam_name"])
+
+    # fallback 1 (global item averages)
+    wdf = wdf.merge(global_coc_opp_cost, how="left", left_on=["spam_name"], right_index=True)
+    wdf.loc[(wdf.coc_val.isna())|(wdf.coc_val==0), "coc_val"] = wdf.loc[(wdf.coc_val.isna())|(wdf.coc_val==0), "coc_val_fallback"]
+    wdf.loc[(wdf.coc_err.isna())|(wdf.coc_err==0), "coc_err"] = wdf.loc[(wdf.coc_err.isna())|(wdf.coc_err==0), "coc_err_fallback"]
+
+    # fallback 2 (global type averages)
+    wdf.loc[(wdf.coc_val.isna())|(wdf.coc_val==0), "coc_val"] = oc_crop_coc
+    wdf.loc[(wdf.coc_err.isna())|(wdf.coc_err==0), "coc_err"] = oc_crop_coc_err
+    wdf = wdf.drop(columns=["coc_val_fallback", "coc_err_fallback"])
+
+    # convert coc from km2 to m2
+    wdf["coc_opp_cost_m2"] = wdf["coc_val"] / 1000000
+
+    wdf["coc_opp_cost_calc"] = wdf["bd_val"] * wdf["coc_opp_cost_m2"]
+    wdf["coc_err_prop"] = np.sqrt((wdf.coc_err/wdf.coc_val)**2 + (wdf.bd_err/wdf.bd_val)**2)
+    wdf["coc_opp_cost_calc_err"] = wdf["coc_opp_cost_calc"] * wdf["coc_err_prop"]
+
+    wdf.drop(columns=["bd_val", "bd_err", "coc_err_prop"], inplace=True)
+
     wdf.to_csv(f"{country_savefile_path}/{filename}")
     return wdf
 
