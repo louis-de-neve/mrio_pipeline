@@ -13,7 +13,7 @@ skip = [
         # "No-ruminant"
         ]
 
-results_file = Path(f"C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Leakage_ratios\\results\\mrio_pipeline_results_260804\\2021\\{country}\\impacts_full.csv")
+results_file = Path(f"C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Leakage_ratios\\results\\mrio_pipeline_results_260826\\2021\\{country}\\impacts_full.csv")
 save_dir = Path("C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Work for others\\Andrew DEFRA 8sept")
 
 diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
@@ -71,19 +71,16 @@ for d, diet in enumerate(diets_dat.columns[1:]):
     total_height = 0
     for g, group in enumerate(dfxx["group_name_v7"].unique()):
         
-        if group == "Sugar crops":
-            continue
-
         group_impact = dfxx[dfxx["group_name_v7"] == group]["bd_opp_cost_calc"].values[0]
 
         diet_base = diets.loc[diets["group_name_v7"] == group, diet].sum()
         base_base = diets.loc[diets["group_name_v7"] == group, "Baseline"].sum()
-        
+
         group_scalar = diet_base / base_base
 
         val_scalar = (1/cal_scalar) * group_scalar
 
-        if group == "Stimulants and spices":
+        if group in ("Stimulants and spices", "Sugar crops"):
             val_scalar = 1
 
         val = group_impact * val_scalar * pop_scalar * (1/365) * (1/p_scalar) * (1/sp_count)
