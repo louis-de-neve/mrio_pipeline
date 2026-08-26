@@ -41,9 +41,9 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "../results/mrio_pipeline_results_260804" # set this to any dir of your choosing
+RESULTS_DIR = "../results/mrio_pipeline_results_260826" # set this to any dir of your choosing
 ERROR_ITERATIONS = 1000
-YEARS = list(range(1961, 2022))
+YEARS = list(range(2010, 2022))
 
 # Multiprocessing settings
 N_PROCESSES = 16
@@ -54,6 +54,7 @@ OVERWRITE = False
 # Defaults to all countries if this is None, otherwise specific a list of your favourite country iso3 codes e.g. ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
 # COUNTRIES = ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]
 COUNTRIES = None
+COUNTRIES = ["GBR"]
 
 # Pipeline components to run
 # 0 = all, 1 = unzip, 2 = error matrix, 3 = trade matrix, 4 = animal products to feed, 5 = country impacts
