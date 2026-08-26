@@ -5,20 +5,19 @@ import matplotlib.pyplot as plt
 # import seaborn as sns
 from pathlib import Path
 
-# country = "GBR"
-country = "USA"
+country = "GBR"
+# country = "USA"
 
 skip = [
         "EAT-Lancet"
         # "No-ruminant"
         ]
 
-results_file = Path(f"../mrio_pipeline_results_260522/2021/{country}/impacts_full.csv")
-# save_dir = Path("E:\OneDrive\OneDrive - University of Cambridge\Work\Work for others\Andrew RS workshop")
-save_dir = Path("C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Work for others\\Andrew RS workshop")
+results_file = Path(f"C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Leakage_ratios\\results\\mrio_pipeline_results_260804\\2021\\{country}\\impacts_full.csv")
+save_dir = Path("C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Work for others\\Andrew DEFRA 8sept")
 
-# diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
-diets_dat = pd.read_csv("misc_scripts/diets5_US.csv", encoding="latin-1")
+diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
+# diets_dat = pd.read_csv("misc_scripts/diets5_US.csv", encoding="latin-1")
 
 spdf = pd.read_csv("input_data/mapspam_outputs/outputs/2020/processed_results_2020.csv")
 sp_count = spdf.sp_count.max()
@@ -55,7 +54,7 @@ dfxx = dfx.groupby("group_name_v7").sum()["bd_opp_cost_calc"].reset_index()
 fig, ax = plt.subplots(figsize=(7, 6))
 
 pop_scalar = 1.0 / 69487000 
-pop_scalar = 1.0 / 342500000 # 342.6M
+# pop_scalar = 1.0 / 342500000 # 342.6M
 
 for d, diet in enumerate(diets_dat.columns[1:]):
 
@@ -106,8 +105,8 @@ ax.set_ylabel("Mean change extinction risk opp-cost ($\Delta E$ per sp., per cap
 
 fig.tight_layout()
 
-# fig.savefig(save_dir / "UK_diets.png", dpi=300)
+fig.savefig(save_dir / "UK_diets.png", dpi=300)
 
-fig.savefig(save_dir / "US_diets.png", dpi=300)
+# fig.savefig(save_dir / "US_diets.png", dpi=300)
 
 plt.show()

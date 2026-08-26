@@ -5,6 +5,8 @@ import seaborn as sns
 import seaborn.objects as so
 import os
 
+results_dir = os.path.join("..", "..", "..", "results", "mrio_pipeline_results_260804")
+
 color_dict = {'Grains, roots, starchy carbohydrates' : "#E69F00",
                 'Legumes, beans, nuts' : "#F0E442",
                 'Fruit and vegetables' : "#009E73",
@@ -41,15 +43,18 @@ master_df_imports = pd.DataFrame()
 
 variable = "Cons"
 
-results_dir = "../results/"
 for year in os.listdir(results_dir):
     if year == "impacts":
         continue
-    for country in ["USA", "IND", "BRA", "JPN", "UGA", "GBR"]:
+    for country in [
+                    # "USA", "IND", "BRA", "JPN", "UGA", 
+                    "GBR"
+                    ]:
         if country == ".mrio" or country == "missing_items.txt" or country == "AUS":
             continue
 
-        df1 = pd.read_csv(f"{results_dir}{year}/{country}/df_{country.lower()}.csv", index_col=0)
+        df1_path = os.path.join(results_dir, year, country, f"df_{country.lower()}.csv")
+        df1 = pd.read_csv(df1_path, index_col=0)
         df1 = df1[["Group", variable, "bd_opp_total", "bd_opp_total_err"]]
         df1 = df1.groupby(["Group"]).sum().reset_index()
         df1["Year"] = int(year)
@@ -62,7 +67,8 @@ for year in os.listdir(results_dir):
         df1 = df1.drop(columns=["FAO_Code", "Area Code", "Value"])
         master_df_local = pd.concat([master_df_local, df1], ignore_index=True)
 
-        df2 = pd.read_csv(f"{results_dir}{year}/{country}/df_os.csv", index_col=0)
+        df2_path = os.path.join(results_dir, year, country, "df_os.csv")
+        df2 = pd.read_csv(df2_path, index_col=0)
         df2 = df2[["Group", variable, "bd_opp_total", "bd_opp_total_err"]]
         if country == "GBR":
             print(df2[df2["Group"]=="Ruminant meat"], year)

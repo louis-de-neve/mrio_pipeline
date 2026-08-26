@@ -4,8 +4,8 @@ import seaborn as sns
 import seaborn.objects as so
 import os
 
-res_dir = "../mrio_pipeline_results_260522"
-base_dir = "."
+res_dir = os.path.join("..", "..", "..", "results", "mrio_pipeline_results_260804")
+base_dir = ".."
 
 # countries = [a[-7:-4] for a in os.listdir(f"{res_dir}/impacts/2021")]
 countries = ["GBR"]
