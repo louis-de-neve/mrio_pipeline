@@ -13,3 +13,5 @@ xlrd>=2.0.2
 # Progress bars
 tqdm>=4.64.0
 rich>=13.0.0
+
+seaborn>=0.13.2

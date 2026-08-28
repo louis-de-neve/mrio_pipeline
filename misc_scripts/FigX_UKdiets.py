@@ -8,13 +8,20 @@ from pathlib import Path
 country = "GBR"
 # country = "USA"
 
+year = 2021
+
 skip = [
         "EAT-Lancet"
         # "No-ruminant"
         ]
 
-results_file = Path(f"C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Leakage_ratios\\results\\mrio_pipeline_results_260826\\2021\\{country}\\impacts_full.csv")
+res_dir = Path("../results/mrio_pipeline_results_260826_spam2010")
+results_file = res_dir / str(year) / country / "impacts_full.csv"
 save_dir = Path("C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Work for others\\Andrew DEFRA 8sept")
+
+Path(f"../outputs/{Path(res_dir).name}").mkdir(parents=True, exist_ok=True)
+save_dir = Path(f"../outputs/{Path(res_dir).name}")
+
 
 diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
 # diets_dat = pd.read_csv("misc_scripts/diets5_US.csv", encoding="latin-1")
@@ -102,8 +109,7 @@ ax.set_ylabel("Mean change extinction risk opp-cost ($\Delta E$ per sp., per cap
 
 fig.tight_layout()
 
-fig.savefig(save_dir / "UK_diets.png", dpi=300)
-
-# fig.savefig(save_dir / "US_diets.png", dpi=300)
+print(f"Saving figure to ../outputs/{Path(res_dir).name}/FigX_UKdiets_{year}.png")
+plt.savefig(f"../outputs/{Path(res_dir).name}/FigX_UKdiets_{year}.png", dpi=600, bbox_inches='tight')
 
 plt.show()
