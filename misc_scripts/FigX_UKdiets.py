@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 # import seaborn as sns
 from pathlib import Path
 
-country = "GBR"
-# country = "USA"
+# country = "GBR"
+country = "USA"
 
 year = 2021
 
@@ -22,9 +22,13 @@ results_file = res_dir / str(year) / country / "impacts_full.csv"
 Path(f"../outputs/{Path(res_dir).name}").mkdir(parents=True, exist_ok=True)
 save_dir = Path(f"../outputs/{Path(res_dir).name}")
 
+if country == "GBR":
+    diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
+    pop_scalar = 1.0 / 69487000 
 
-diets_dat = pd.read_csv("misc_scripts/diets5_UK.csv", encoding="latin-1")
-# diets_dat = pd.read_csv("misc_scripts/diets5_US.csv", encoding="latin-1")
+elif country == "USA":
+    diets_dat = pd.read_csv("misc_scripts/diets5_US.csv", encoding="latin-1")
+    pop_scalar = 1.0 / 342500000 # 342.6M
 
 spdf = pd.read_csv("input_data/mapspam_outputs/outputs/2020/processed_results_2020.csv")
 sp_count = spdf.sp_count.max()
@@ -60,8 +64,7 @@ dfxx = dfx.groupby("group_name_v7").sum()["bd_opp_cost_calc"].reset_index()
 
 fig, ax = plt.subplots(figsize=(7, 6))
 
-pop_scalar = 1.0 / 69487000 
-# pop_scalar = 1.0 / 342500000 # 342.6M
+
 
 for d, diet in enumerate(diets_dat.columns[1:]):
 
@@ -109,7 +112,7 @@ ax.set_ylabel("Mean change extinction risk opp-cost ($\Delta E$ per sp., per cap
 
 fig.tight_layout()
 
-print(f"Saving figure to ../outputs/{Path(res_dir).name}/FigX_UKdiets_{year}.png")
-plt.savefig(f"../outputs/{Path(res_dir).name}/FigX_UKdiets_{year}.png", dpi=600, bbox_inches='tight')
+print(f"Saving figure to ../outputs/{Path(res_dir).name}/FigX_{country}_{year}.png")
+plt.savefig(f"../outputs/{Path(res_dir).name}/FigX_{country}_{year}.png", dpi=600, bbox_inches='tight')
 
 plt.show()
