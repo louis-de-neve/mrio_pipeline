@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
-results_dir = "../mrio_pipeline_results_260522"
+results_dir = Path("../../results/mrio_pipeline_results_260826")
 year=2021
 
 df = pd.DataFrame()
@@ -180,7 +180,8 @@ ax.set_ylim(1e-13, 1e-7)
 ax.set_yscale("log")
 ax.set_ylabel("Extinction opportunity cost distribution \n ($\Delta$E per kilogram)")
 
-Path("../outputs").mkdir(exist_ok=True)
-plt.savefig(f"../outputs/Fig1_recreation_{year}.png", dpi=600, bbox_inches='tight')
+Path(f"../outputs/{Path(results_dir).name}").mkdir(parents=True, exist_ok=True)
+print(f"Saving figure to ../outputs/{Path(results_dir).name}/Fig1_recreation_{year}.png")
+plt.savefig(f"../outputs/{Path(results_dir).name}/Fig1_recreation_{year}.png", dpi=600, bbox_inches='tight')
 
     
