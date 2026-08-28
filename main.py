@@ -41,9 +41,10 @@ from provenance._process_dat import main_global as process_dat_main_global
 from pandas import read_excel, read_csv
 
 # CONFIG
-RESULTS_DIR = "../results/mrio_pipeline_results_260826_spam2010" # set this to any dir of your choosing
+RESULTS_DIR = "../results/mrio_pipeline_results_260826_spam2020" # set this to any dir of your choosing
 ERROR_ITERATIONS = 1000
-YEARS = list(range(2020, 2023))
+# YEARS = list(range(2022, 2022))
+YEARS = [2021]
 
 # Multiprocessing settings
 N_PROCESSES = 16
@@ -72,7 +73,7 @@ WORKING_DIR = '.'
 # Setting this to False reverts to using the 2010 mapspam data for all years beyond 2010 
 # (because the 2020 data is suspicious, speak to Tom for details. Even better speak to
 # someone who knows what they're talking about)
-USE_2020_DATA = False # have updated to use most recent mapspam - UK/Ghana/USA issues
+USE_2020_DATA = True # have updated to use most recent mapspam - UK/Ghana/USA issues
 # fixed though it seems some issues persist.
 
 # Carbon opportunity cost (COC) is a one-off cost of converting land, but production

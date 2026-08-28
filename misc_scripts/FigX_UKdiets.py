@@ -15,9 +15,9 @@ skip = [
         # "No-ruminant"
         ]
 
-res_dir = Path("../results/mrio_pipeline_results_260826_spam2010")
+res_dir = Path("../results/mrio_pipeline_results_260826_spam2020")
 results_file = res_dir / str(year) / country / "impacts_full.csv"
-save_dir = Path("C:\\Users\\Thomas Ball\\OneDrive - University of Cambridge\\Work\\Work for others\\Andrew DEFRA 8sept")
+
 
 Path(f"../outputs/{Path(res_dir).name}").mkdir(parents=True, exist_ok=True)
 save_dir = Path(f"../outputs/{Path(res_dir).name}")

@@ -167,8 +167,8 @@ group_df["range"] = group_df["q90"] - group_df["q10"]
 
 fig, ax = plt.subplots(figsize=(8,7))
 for i in group_df.index:
-    group, median, q10, q90, colour, count, iqr = group_df.loc[i]
-
+    group, median, q10, q90, colour, count, iqr = group_df.loc[i] 
+    print(group, median)
     ax.bar(x=i, height=iqr, bottom=q10, color=colour)
     ax.bar(x=i, height=0, bottom = median, fill=False, edgecolor = invert_color(colour), linewidth=2)
 
